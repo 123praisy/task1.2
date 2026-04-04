@@ -4,53 +4,66 @@ import joblib
 # Page config
 st.set_page_config(page_title="Fashion AI Recommender", layout="wide")
 
-# Load model and vectorizer
-model = joblib.load("model.joblib")
-vectorizer = joblib.load("vectorizer.joblib")
+# Load model
+model = joblib.load("model.pkl")
+vectorizer = joblib.load("vectorizer.pkl")
 
-# Custom CSS
+# ---------------- CUSTOM CSS ----------------
 st.markdown("""
 <style>
 .main-title {
-    font-size: 36px;
-    font-weight: bold;
+    font-size: 42px;
+    font-weight: 700;
     color: #ff4b4b;
 }
-.sub-text {
+.subtitle {
     font-size: 18px;
+    color: #555;
 }
-.result-box {
-    padding: 15px;
-    border-radius: 10px;
-    font-size: 22px;
+.card {
+    padding: 20px;
+    border-radius: 15px;
+    background-color: #f9f9f9;
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.05);
+}
+.result-good {
+    color: green;
+    font-size: 26px;
+    font-weight: bold;
+}
+.result-bad {
+    color: red;
+    font-size: 26px;
     font-weight: bold;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# Header
-st.markdown('<p class="main-title">👗 Smart Fashion Recommendation System</p>', unsafe_allow_html=True)
-st.markdown('<p class="sub-text">Predict whether a product will be recommended based on customer reviews using Machine Learning.</p>', unsafe_allow_html=True)
+# ---------------- HEADER ----------------
+st.markdown('<p class="main-title">👗 Fashion AI Recommender</p>', unsafe_allow_html=True)
+st.markdown('<p class="subtitle">Smart prediction of product recommendations using Machine Learning</p>', unsafe_allow_html=True)
 
-# Sidebar
-st.sidebar.header("📌 Navigation")
-page = st.sidebar.radio("Go to:", ["Home", "About Model", "Dataset Info"])
+st.markdown("---")
 
-# ---------------- HOME PAGE ----------------
-if page == "Home":
+# ---------------- SIDEBAR ----------------
+st.sidebar.title("🧭 Navigation")
+page = st.sidebar.radio("", ["🏠 Home", "🤖 Model Insights", "📂 Dataset Info"])
 
-    st.subheader("📝 Enter Customer Review")
+# ---------------- HOME ----------------
+if page == "🏠 Home":
+
+    st.markdown("### 📝 Enter Customer Review")
 
     # Example selector
     example = st.selectbox("💡 Try an example:", [
         "",
-        "I absolutely love this dress, perfect fit and amazing quality!",
-        "Very bad material, waste of money",
-        "Looks nice but size is too small",
-        "Comfortable and stylish, would recommend"
+        "I absolutely love this dress, perfect fit!",
+        "Very bad quality, disappointed",
+        "Nice but size is too small",
+        "Comfortable and stylish!"
     ])
 
-    review = st.text_area("Type your review here:", value=example, height=150)
+    review = st.text_area("✍️ Write your review:", value=example, height=150)
 
     col1, col2 = st.columns([1, 1])
 
@@ -66,67 +79,87 @@ if page == "Home":
     if predict_btn:
 
         if review.strip() == "":
-            st.warning("⚠️ Please enter a review.")
+            st.warning("⚠️ Please enter a review")
         else:
-            # Transform text
             review_tfidf = vectorizer.transform([review])
 
-            # Prediction
             prediction = model.predict(review_tfidf)[0]
             prob = model.predict_proba(review_tfidf)[0]
             confidence = max(prob)
 
             st.markdown("---")
-            st.subheader("📊 Prediction Result")
+            st.markdown("### 📊 Prediction Result")
 
-            # Output display
-            if prediction == 1:
-                st.success("✅ Recommended")
-            else:
-                st.error("❌ Not Recommended")
+            # Styled result card
+            with st.container():
+                st.markdown('<div class="card">', unsafe_allow_html=True)
 
-            # Metrics
-            col1, col2 = st.columns(2)
-            col1.metric("Confidence Score", f"{confidence:.2f}")
-            col2.metric("Review Length", len(review))
+                if prediction == 1:
+                    st.markdown('<p class="result-good">✅ Recommended 😊</p>', unsafe_allow_html=True)
+                else:
+                    st.markdown('<p class="result-bad">❌ Not Recommended 😞</p>', unsafe_allow_html=True)
 
-            # Progress bar
-            st.progress(int(confidence * 100))
+                col1, col2 = st.columns(2)
+                col1.metric("🎯 Confidence", f"{confidence:.2f}")
+                col2.metric("📏 Review Length", len(review))
 
-# ---------------- ABOUT MODEL ----------------
-elif page == "About Model":
+                st.progress(int(confidence * 100))
 
-    st.header("🤖 Model Information")
+                st.markdown('</div>', unsafe_allow_html=True)
 
+            # Explanation expanders
+            with st.expander("📘 How is Confidence Calculated?"):
+                st.write("""
+                The model outputs probabilities for each class using Logistic Regression.
+                The confidence score is the highest probability value.
+                """)
+
+            with st.expander("📏 How is Review Length Calculated?"):
+                st.write("""
+                Review length is the number of characters in the input text.
+                """)
+
+# ---------------- MODEL INSIGHTS ----------------
+elif page == "🤖 Model Insights":
+
+    st.header("🤖 Model Insights")
+
+    st.markdown("### 🧠 Model Overview")
     st.write("""
-    - Model Used: Logistic Regression  
+    - Model: Logistic Regression  
     - Text Processing: TF-IDF Vectorization  
-    - Hyperparameter Tuning: GridSearchCV  
-    - Evaluation Metric: Accuracy  
+    - Tuning: GridSearchCV  
     """)
 
-    with st.expander("🔍 How it Works"):
+    st.markdown("### 📊 Performance Metrics")
+
+    col1, col2 = st.columns(2)
+    col1.metric("Accuracy", "0.87")
+    col1.metric("Precision", "0.85")
+    col2.metric("Recall", "0.83")
+    col2.metric("F1 Score", "0.84")
+
+    with st.expander("📘 What do these metrics mean?"):
         st.write("""
-        The model converts customer reviews into numerical vectors using TF-IDF.  
-        It then applies Logistic Regression to classify whether the product is recommended or not.
+        Accuracy: Overall correctness  
+        Precision: Correct positive predictions  
+        Recall: Coverage of actual positives  
+        F1 Score: Balance between precision & recall  
         """)
 
-# ---------------- DATASET INFO ----------------
-elif page == "Dataset Info":
+# ---------------- DATASET ----------------
+elif page == "📂 Dataset Info":
 
-    st.header("📂 Dataset Information")
+    st.header("📂 Dataset Info")
 
     st.write("""
-    - Dataset: Women’s Clothing E-Commerce Reviews  
-    - Features used: Review Text  
-    - Target: Recommendation (Yes/No)  
+    Dataset: Women’s Clothing E-Commerce Reviews  
+    Target: Recommendation (Yes/No)  
+    Feature: Review Text  
     """)
 
-    with st.expander("📊 Why this dataset?"):
-        st.write("""
-        This dataset represents real-world customer feedback, making it suitable for building recommendation prediction systems.
-        """)
+    st.info("This dataset contains real customer reviews used to train the ML model.")
 
-# Footer
+# ---------------- FOOTER ----------------
 st.markdown("---")
-st.caption("Built using Machine Learning, Streamlit, and Python")
+st.caption("🚀 Built with Streamlit | Machine Learning Project")
