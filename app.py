@@ -5,8 +5,8 @@ import joblib
 st.set_page_config(page_title="Fashion AI Recommender", layout="wide")
 
 # Load model and vectorizer
-model = joblib.load("model.pkl")
-vectorizer = joblib.load("vectorizer.pkl")
+model = joblib.load("model.joblib")
+vectorizer = joblib.load("vectorizer.joblib")
 
 # Custom CSS
 st.markdown("""
