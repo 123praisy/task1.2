@@ -5,25 +5,56 @@ import plotly.graph_objects as go
 import random
 
 # ---------------- PAGE CONFIG ----------------
-st.set_page_config(page_title="Fashion AI Recommender", layout="wide")
+st.set_page_config(page_title="Product Recommendation Calculator", layout="wide")
 
 # ---------------- LOAD MODEL ----------------
 model = joblib.load("model.joblib")
 vectorizer = joblib.load("vectorizer.joblib")
 
-# ---------------- LOAD DATASET ----------------
+# ---------------- LOAD DATA ----------------
 df = pd.read_csv("Womens Clothing E-Commerce Reviews.csv")
 df = df.dropna(subset=["Review Text"])
 
-# ---------------- CSS ----------------
+# ---------------- UI STYLE ----------------
 st.markdown("""
 <style>
-.main-title {font-size: 42px; font-weight: 700; color: #ff4b4b;}
-.subtitle {font-size: 18px; color: #555;}
-.card {padding: 20px; border-radius: 15px; background-color: #f9f9f9;
-       box-shadow: 0px 4px 10px rgba(0,0,0,0.05);}
-.result-good {color: green; font-size: 26px; font-weight: bold;}
-.result-bad {color: red; font-size: 26px; font-weight: bold;}
+.stApp {
+    background: linear-gradient(135deg, #f8f9fb, #eef1f7);
+}
+.main-title {
+    font-size: 42px;
+    font-weight: 800;
+    color: #222;
+    text-align: center;
+}
+.subtitle {
+    font-size: 18px;
+    color: #666;
+    text-align: center;
+    margin-bottom: 20px;
+}
+.card {
+    padding: 25px;
+    border-radius: 18px;
+    background: white;
+    box-shadow: 0px 6px 20px rgba(0,0,0,0.08);
+}
+.result-good {
+    color: #2e7d32;
+    font-size: 26px;
+    font-weight: bold;
+}
+.result-bad {
+    color: #c62828;
+    font-size: 26px;
+    font-weight: bold;
+}
+.stButton>button {
+    border-radius: 10px;
+    background-color: #4CAF50;
+    color: white;
+    font-weight: 600;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -32,7 +63,7 @@ def show_confidence_gauge(confidence):
     fig = go.Figure(go.Indicator(
         mode="gauge+number",
         value=confidence * 100,
-        title={'text': "Confidence Level"},
+        title={'text': "Confidence Score"},
         gauge={
             'axis': {'range': [0, 100]},
             'steps': [
@@ -45,144 +76,133 @@ def show_confidence_gauge(confidence):
     st.plotly_chart(fig, use_container_width=True)
 
 # ---------------- HEADER ----------------
-st.markdown('<p class="main-title">👗 Fashion AI Recommender</p>', unsafe_allow_html=True)
-st.markdown('<p class="subtitle">Predict product recommendations using Machine Learning</p>', unsafe_allow_html=True)
+st.markdown('<p class="main-title">🛍️ Product Recommendation Calculator Based on Reviews</p>', unsafe_allow_html=True)
+st.markdown('<p class="subtitle">Evaluate customer reviews to estimate whether a product is likely to be recommended</p>', unsafe_allow_html=True)
+
 st.markdown("---")
 
 # ---------------- SIDEBAR ----------------
-st.sidebar.title("🧭 Navigation")
-page = st.sidebar.radio("", ["🏠 Home", "🤖 Model Insights", "📂 Dataset Info"])
+st.sidebar.title("📊 Dashboard")
+page = st.sidebar.radio("Navigate", ["🏠 Review Analyzer", "📈 Model Performance", "📂 Dataset Explorer"])
 
 # ================= HOME =================
-if page == "🏠 Home":
+if page == "🏠 Review Analyzer":
 
-    st.markdown("### 🔍 Explore Reviews")
+    st.markdown("## 🔍 Review Analysis")
 
-    # ⭐ Rating filter
+    # Filter
     if "Rating" in df.columns:
-        rating_filter = st.slider("⭐ Filter by Rating", 1, 5, (1, 5))
+        rating_filter = st.slider("⭐ Filter Reviews by Rating", 1, 5, (1, 5))
         filtered_df = df[(df["Rating"] >= rating_filter[0]) & (df["Rating"] <= rating_filter[1])]
     else:
         filtered_df = df
 
-    # 🔍 Search reviews
-    search_query = st.text_input("🔍 Search keyword in reviews")
+    # Search
+    search_query = st.text_input("🔎 Search Reviews")
 
     if search_query:
-        filtered_df = filtered_df[filtered_df["Review Text"].str.contains(search_query, case=False)]
+        filtered_df = filtered_df[
+            filtered_df["Review Text"].str.contains(search_query, case=False)
+        ]
 
-    reviews_list = filtered_df["Review Text"].tolist()
+    reviews = filtered_df["Review Text"].tolist()
+    reviews_sample = reviews[:200]
 
-    # Limit size
-    reviews_sample = reviews_list[:200]
-
-    # 🎲 Random review
-    if st.button("🎲 Random Review"):
+    # Random
+    if st.button("🎲 Generate Sample Review"):
         review = random.choice(reviews_sample)
     else:
         review = ""
 
-    # Selectbox
-    example = st.selectbox("💡 Choose a review:", [""] + reviews_sample)
+    example = st.selectbox("📌 Select a Review Example", [""] + reviews_sample)
 
-    # Text input
-    review = st.text_area("✍️ Or write your own review:", value=example or review, height=150)
+    review = st.text_area(
+        "✍️ Enter or Edit Review Text",
+        value=example or review,
+        height=150
+    )
 
-    # Buttons
     col1, col2 = st.columns(2)
-    predict_btn = col1.button("🔍 Predict")
-    clear_btn = col2.button("❌ Clear")
+    analyze_btn = col1.button("🚀 Analyze Recommendation")
+    clear_btn = col2.button("🧹 Clear Input")
 
     if clear_btn:
         review = ""
 
     # ---------------- PREDICTION ----------------
-    if predict_btn:
+    if analyze_btn:
 
         if review.strip() == "":
-            st.warning("⚠️ Please enter a review")
+            st.warning("⚠️ Please enter a review to analyze")
         else:
             review_tfidf = vectorizer.transform([review])
 
             prediction = model.predict(review_tfidf)[0]
             prob = model.predict_proba(review_tfidf)[0]
 
-            prob_not_rec = float(prob[0])
-            prob_rec = float(prob[1])
+            prob_not = float(prob[0])
+            prob_yes = float(prob[1])
 
-            confidence = prob_rec if prediction == 1 else prob_not_rec
+            confidence = prob_yes if prediction == 1 else prob_not
 
             review_length = len(review)
             word_count = len(review.split())
 
             st.markdown("---")
-            st.markdown("### 📊 Prediction Result")
+            st.markdown("## 📊 Analysis Results")
 
             with st.container():
                 st.markdown('<div class="card">', unsafe_allow_html=True)
 
                 if prediction == 1:
-                    st.markdown(f'<p class="result-good">✅ Recommended ({confidence:.2f})</p>', unsafe_allow_html=True)
+                    st.markdown(f'<p class="result-good">✅ Likely Recommended ({confidence:.2f})</p>', unsafe_allow_html=True)
                 else:
-                    st.markdown(f'<p class="result-bad">❌ Not Recommended ({confidence:.2f})</p>', unsafe_allow_html=True)
+                    st.markdown(f'<p class="result-bad">❌ Likely Not Recommended ({confidence:.2f})</p>', unsafe_allow_html=True)
 
                 col1, col2 = st.columns(2)
-                col1.metric("🎯 Confidence", f"{confidence:.2f}")
-                col2.metric("📏 Characters", review_length)
+                col1.metric("Confidence Score", f"{confidence:.2f}")
+                col2.metric("Character Count", review_length)
 
                 col3, col4 = st.columns(2)
-                col3.metric("📝 Words", word_count)
-                col4.metric("📊 Recommended Prob", f"{prob_rec:.2f}")
+                col3.metric("Word Count", word_count)
+                col4.metric("Recommendation Probability", f"{prob_yes:.2f}")
 
                 st.progress(int(confidence * 100))
 
                 st.markdown('</div>', unsafe_allow_html=True)
 
-            # Probability breakdown
-            st.markdown("### 📊 Prediction Breakdown")
+            # Breakdown
+            st.markdown("### 📊 Probability Breakdown")
             col1, col2 = st.columns(2)
-            col1.metric("❌ Not Recommended", f"{prob_not_rec:.2f}")
-            col2.metric("✅ Recommended", f"{prob_rec:.2f}")
+            col1.metric("Not Recommended", f"{prob_not:.2f}")
+            col2.metric("Recommended", f"{prob_yes:.2f}")
 
             # Gauge
-            st.markdown("### 🎯 Confidence Meter")
+            st.markdown("### 🎯 Confidence Visualization")
             show_confidence_gauge(confidence)
 
-            # Confidence level message
-            if confidence > 0.75:
-                st.success("🔥 High confidence prediction")
-            elif confidence > 0.5:
-                st.info("⚖️ Moderate confidence")
-            else:
-                st.warning("⚠️ Low confidence prediction")
-
             # Explanation
-            with st.expander("📘 How is Confidence Calculated?"):
+            with st.expander("📘 How this result is calculated"):
                 st.write(f"""
-                - Not Recommended: {prob_not_rec:.2f}  
-                - Recommended: {prob_rec:.2f}  
+                The system evaluates the review text and assigns probabilities:
 
-                Confidence = probability of predicted class → {confidence:.2f}
-                """)
+                - Not Recommended: {prob_not:.2f}  
+                - Recommended: {prob_yes:.2f}  
 
-            with st.expander("📏 Review Length Calculation"):
-                st.write(f"""
-                Characters = {review_length}  
-                Words = {word_count}
+                The final result is based on the higher probability.
+
+                Confidence Score = {confidence:.2f}
                 """)
 
 # ================= MODEL =================
-elif page == "🤖 Model Insights":
+elif page == "📈 Model Performance":
 
-    st.header("🤖 Model Insights")
+    st.header("📈 Model Performance Overview")
 
     st.write("""
-    - Model: Logistic Regression  
-    - Text Processing: TF-IDF  
-    - Tuning: GridSearchCV  
+    This system uses a trained classification model to evaluate customer reviews
+    and estimate recommendation likelihood.
     """)
-
-    st.markdown("### 📊 Performance")
 
     col1, col2 = st.columns(2)
     col1.metric("Accuracy", "0.87")
@@ -191,19 +211,18 @@ elif page == "🤖 Model Insights":
     col2.metric("F1 Score", "0.84")
 
 # ================= DATASET =================
-elif page == "📂 Dataset Info":
+elif page == "📂 Dataset Explorer":
 
-    st.header("📂 Dataset Info")
+    st.header("📂 Dataset Explorer")
 
-    st.write("### 📊 Sample Dataset")
+    st.write("Preview of dataset used for analysis:")
+
     st.dataframe(df.head(50))
 
     st.write("""
-    Dataset: Women’s Clothing E-Commerce Reviews  
-    Target: Recommendation  
-    Feature: Review Text  
+    The dataset contains real customer reviews, ratings, and recommendation labels.
     """)
 
 # ---------------- FOOTER ----------------
 st.markdown("---")
-st.caption("🚀 Built with Streamlit | ML Project")
+st.caption("Built as an intelligent review analysis tool for product recommendation insights")
