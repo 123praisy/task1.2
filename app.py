@@ -2,7 +2,6 @@ import streamlit as st
 import joblib
 import pandas as pd
 import plotly.graph_objects as go
-import time
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(page_title="Product Recommendation Calculator", layout="wide")
@@ -18,55 +17,20 @@ df = df.dropna(subset=["Review Text"])
 # ---------------- UI STYLE ----------------
 st.markdown("""
 <style>
-.stApp {
-    background-color: #f5f7fb;
-}
+.stApp { background-color: #f5f7fb; }
 /* MAIN TITLE */
-.main-title {
-    font-size: 48px;
-    font-weight: 800;
-    text-align: center;
-    color: #1f2937;
-}
+.main-title { font-size: 48px; font-weight: 800; text-align: center; color: #1f2937; }
 /* SUBTITLE */
-.subtitle {
-    font-size: 18px;
-    text-align: center;
-    color: #6b7280;
-    margin-bottom: 30px;
-}
+.subtitle { font-size: 18px; text-align: center; color: #6b7280; margin-bottom: 30px; }
 /* SECTION TITLE */
-.section-title {
-    font-size: 22px;
-    font-weight: 600;
-    color: #374151;
-    margin-top: 25px;
-}
+.section-title { font-size: 22px; font-weight: 600; color: #374151; margin-top: 25px; }
 /* CARD */
-.card {
-    padding: 25px;
-    border-radius: 15px;
-    background: white;
-    box-shadow: 0px 6px 18px rgba(0,0,0,0.08);
-}
+.card { padding: 25px; border-radius: 15px; background: white; box-shadow: 0px 6px 18px rgba(0,0,0,0.08); }
 /* RESULT */
-.result-good {
-    color: #16a34a;
-    font-size: 20px;
-    font-weight: 600;
-}
-.result-bad {
-    color: #dc2626;
-    font-size: 20px;
-    font-weight: 600;
-}
+.result-good { color: #16a34a; font-size: 20px; font-weight: 600; }
+.result-bad { color: #dc2626; font-size: 20px; font-weight: 600; }
 /* BUTTON */
-.stButton>button {
-    border-radius: 10px;
-    background-color: #2563eb;
-    color: white;
-    font-weight: 600;
-}
+.stButton>button { border-radius: 10px; background-color: #2563eb; color: white; font-weight: 600; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -144,26 +108,6 @@ if page == "🏠 Review Analysis":
 
             st.markdown('</div>', unsafe_allow_html=True)
 
-        # ---------------- CONFIDENCE VISUAL ----------------
-        st.markdown('<p class="section-title">📊 Confidence Visualization</p>', unsafe_allow_html=True)
-
-        col1, col2, col3 = st.columns([1, 6, 1])
-        col1.markdown("**0%**")
-        progress_placeholder = col2.empty()
-        percent_placeholder = col3.empty()
-
-        for i in range(int(confidence * 100) + 1):
-            time.sleep(0.01)
-            progress_placeholder.progress(i)
-            percent_placeholder.markdown(f"**{i}%**")
-
-        if confidence > 0.75:
-            st.success(f"🔥 High Confidence ({confidence*100:.0f}%)")
-        elif confidence > 0.5:
-            st.info(f"⚖️ Moderate Confidence ({confidence*100:.0f}%)")
-        else:
-            st.warning(f"⚠️ Low Confidence ({confidence*100:.0f}%)")
-
         # ---------------- PROBABILITY BREAKDOWN ----------------
         st.markdown('<p class="section-title">📊 Probability Breakdown</p>', unsafe_allow_html=True)
 
@@ -181,20 +125,37 @@ if page == "🏠 Review Analysis":
 
         st.caption("Left: Not Recommended | Right: Recommended")
 
-        # ---------------- GAUGE ----------------
+        # ---------------- CONFIDENCE METER ----------------
+        st.markdown('<p class="section-title">🎯 Confidence Meter</p>', unsafe_allow_html=True)
+
         fig = go.Figure(go.Indicator(
             mode="gauge+number",
             value=confidence * 100,
-            title={'text': "Confidence Meter"},
+            number={'suffix': "%"},
+            title={'text': "Confidence"},
             gauge={
-                'axis': {'range': [0, 100]},
+                'axis': {'range': [0, 100], 'tickvals':[0,20,40,60,80,100]},
+                'bar': {'color': "#2563eb"},
                 'steps': [
-                    {'range': [0, 50], 'color': "#ef4444"},
-                    {'range': [50, 75], 'color': "#f59e0b"},
-                    {'range': [75, 100], 'color': "#22c55e"}
+                    {'range': [0, 20], 'color': "#ef4444"},      # Very Low
+                    {'range': [20, 40], 'color': "#f97316"},     # Low
+                    {'range': [40, 60], 'color': "#fbbf24"},     # Moderate
+                    {'range': [60, 80], 'color': "#a3e635"},     # High
+                    {'range': [80, 100], 'color': "#22c55e"}     # Very High
                 ],
             }
         ))
+
+        # Add labels for ranges
+        annotations = [
+            dict(x=0.1, y=0.1, text="Very Low", showarrow=False, xref="paper", yref="paper"),
+            dict(x=0.3, y=0.1, text="Low", showarrow=False, xref="paper", yref="paper"),
+            dict(x=0.5, y=0.1, text="Moderate", showarrow=False, xref="paper", yref="paper"),
+            dict(x=0.7, y=0.1, text="High", showarrow=False, xref="paper", yref="paper"),
+            dict(x=0.9, y=0.1, text="Very High", showarrow=False, xref="paper", yref="paper"),
+        ]
+        fig.update_layout(annotations=annotations)
+
         st.plotly_chart(fig, use_container_width=True)
 
 # ================= MODEL =================
