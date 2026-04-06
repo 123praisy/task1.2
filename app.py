@@ -6,8 +6,8 @@ import plotly.graph_objects as go
 st.set_page_config(page_title="Fashion AI Recommender", layout="wide")
 
 # ---------------- LOAD MODEL ----------------
-model = joblib.load("model.pkl")
-vectorizer = joblib.load("vectorizer.pkl")
+model = joblib.load("model.joblib")
+vectorizer = joblib.load("vectorizer.joblib")
 
 # ---------------- CSS ----------------
 st.markdown("""
