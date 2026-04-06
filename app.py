@@ -36,12 +36,12 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------- HEADER ----------------
-st.markdown('<p class="main-title">PRODUCT RECOMMENDATION CALCULATOR BASED ON REVIEWS</p>', unsafe_allow_html=True)
+st.markdown('<p class="main-title">🛍️ Product Recommendation Calculator Based on Reviews</p>', unsafe_allow_html=True)
 st.markdown('<p class="subtitle">Analyze customer reviews to estimate product recommendation likelihood</p>', unsafe_allow_html=True)
 st.markdown("---")
 
 # ---------------- SIDEBAR ----------------
-page = st.sidebar.radio("Navigation", ["Review Analysis", "Model Performance", "Dataset"])
+page = st.sidebar.radio("Navigation", ["🏠 Review Analysis", "📈 Model Performance", "📂 Dataset"])
 
 # ================= HOME =================
 if page == "🏠 Review Analysis":
@@ -49,25 +49,25 @@ if page == "🏠 Review Analysis":
 
     # FILTER
     if "Rating" in df.columns:
-        rating = st.slider("⭐Filter by Rating", 1, 5, (1, 5))
+        rating = st.slider("⭐ Filter by Rating", 1, 5, (1, 5))
         filtered_df = df[(df["Rating"] >= rating[0]) & (df["Rating"] <= rating[1])]
     else:
         filtered_df = df
 
     # SEARCH
-    search = st.text_input("Search Reviews")
+    search = st.text_input("🔎 Search Reviews")
     if search:
         filtered_df = filtered_df[filtered_df["Review Text"].str.contains(search, case=False)]
 
     reviews = filtered_df["Review Text"].tolist()[:200]
 
     # INPUT
-    example = st.selectbox("Choose Sample Review", [""] + reviews)
-    review = st.text_area("Enter Review", value=example, height=120)
+    example = st.selectbox("📌 Choose Sample Review", [""] + reviews)
+    review = st.text_area("✍️ Enter Review", value=example, height=120)
 
     col1, col2 = st.columns(2)
-    analyze = col1.button("Analyze")
-    clear = col2.button("Clear")
+    analyze = col1.button("🚀 Analyze")
+    clear = col2.button("🧹 Clear")
 
     if clear:
         review = ""
@@ -86,18 +86,18 @@ if page == "🏠 Review Analysis":
         word_count = len(review.split())
 
         st.markdown("---")
-        st.markdown('<p class="section-title">Analysis Results</p>', unsafe_allow_html=True)
+        st.markdown('<p class="section-title">📊 Analysis Results</p>', unsafe_allow_html=True)
 
         with st.container():
             st.markdown('<div class="card">', unsafe_allow_html=True)
 
             col1, col2 = st.columns(2)
-            col1.metric("Characters", review_length)
-            col2.metric("Words", word_count)
+            col1.metric("📏 Characters", review_length)
+            col2.metric("📝 Words", word_count)
 
             col3, col4 = st.columns(2)
-            col3.metric("Recommendation Probability", f"{prob_yes:.2f}")
-            col4.metric("Confidence Score", f"{confidence:.2f}")
+            col3.metric("📊 Recommendation Probability", f"{prob_yes:.2f}")
+            col4.metric("🎯 Confidence Score", f"{confidence:.2f}")
 
             st.markdown("<br>", unsafe_allow_html=True)
 
