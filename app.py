@@ -9,8 +9,8 @@ import time
 st.set_page_config(page_title="Product Recommendation Calculator", layout="wide")
 
 # ---------------- LOAD MODEL ----------------
-model = joblib.load("model.pkl")
-vectorizer = joblib.load("vectorizer.pkl")
+model = joblib.load("model.joblib")
+vectorizer = joblib.load("vectorizer.joblib")
 
 # ---------------- LOAD DATA ----------------
 df = pd.read_csv("Womens Clothing E-Commerce Reviews.csv")
