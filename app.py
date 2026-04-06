@@ -23,7 +23,7 @@ st.markdown("""
 }
 /* MAIN TITLE */
 .main-title {
-    font-size: 60px;
+    font-size: 100px;
     font-weight: 800;
     text-align:center;
     color: 'black';
