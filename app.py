@@ -23,10 +23,10 @@ st.markdown("""
 }
 /* MAIN TITLE */
 .main-title {
-    font-size: 48px;
+    font-size: 60px;
     font-weight: 800;
-    text-align: center;
-    color: #1f2937;
+    text-align:center;
+    color: 'black';
 }
 /* SUBTITLE */
 .subtitle {
