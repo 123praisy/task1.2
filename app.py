@@ -1,12 +1,13 @@
 import streamlit as st
 import joblib
+import plotly.graph_objects as go
 
-# Page config
+# ---------------- PAGE CONFIG ----------------
 st.set_page_config(page_title="Fashion AI Recommender", layout="wide")
 
-# Load model
-model = joblib.load("model.joblib")
-vectorizer = joblib.load("vectorizer.joblib")
+# ---------------- LOAD MODEL ----------------
+model = joblib.load("model.pkl")
+vectorizer = joblib.load("vectorizer.pkl")
 
 # ---------------- CUSTOM CSS ----------------
 st.markdown("""
@@ -39,6 +40,24 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# ---------------- GAUGE FUNCTION ----------------
+def show_confidence_gauge(confidence):
+    fig = go.Figure(go.Indicator(
+        mode="gauge+number",
+        value=confidence * 100,
+        title={'text': "Confidence Level"},
+        gauge={
+            'axis': {'range': [0, 100]},
+            'bar': {'thickness': 0.3},
+            'steps': [
+                {'range': [0, 50], 'color': "#ff4b4b"},
+                {'range': [50, 75], 'color': "#ffa600"},
+                {'range': [75, 100], 'color': "#4caf50"}
+            ],
+        }
+    ))
+    st.plotly_chart(fig, use_container_width=True)
+
 # ---------------- HEADER ----------------
 st.markdown('<p class="main-title">👗 Fashion AI Recommender</p>', unsafe_allow_html=True)
 st.markdown('<p class="subtitle">Smart prediction of product recommendations using Machine Learning</p>', unsafe_allow_html=True)
@@ -49,12 +68,11 @@ st.markdown("---")
 st.sidebar.title("🧭 Navigation")
 page = st.sidebar.radio("", ["🏠 Home", "🤖 Model Insights", "📂 Dataset Info"])
 
-# ---------------- HOME ----------------
+# ================= HOME =================
 if page == "🏠 Home":
 
     st.markdown("### 📝 Enter Customer Review")
 
-    # Example selector
     example = st.selectbox("💡 Try an example:", [
         "",
         "I absolutely love this dress, perfect fit!",
@@ -65,7 +83,7 @@ if page == "🏠 Home":
 
     review = st.text_area("✍️ Write your review:", value=example, height=150)
 
-    col1, col2 = st.columns([1, 1])
+    col1, col2 = st.columns(2)
 
     with col1:
         predict_btn = st.button("🔍 Predict")
@@ -81,16 +99,25 @@ if page == "🏠 Home":
         if review.strip() == "":
             st.warning("⚠️ Please enter a review")
         else:
+            # Transform text
             review_tfidf = vectorizer.transform([review])
 
+            # Prediction
             prediction = model.predict(review_tfidf)[0]
             prob = model.predict_proba(review_tfidf)[0]
+
+            prob_not_rec = prob[0]
+            prob_rec = prob[1]
             confidence = max(prob)
+
+            # Review length
+            review_length = len(review)
+            word_count = len(review.split())
 
             st.markdown("---")
             st.markdown("### 📊 Prediction Result")
 
-            # Styled result card
+            # Result card
             with st.container():
                 st.markdown('<div class="card">', unsafe_allow_html=True)
 
@@ -99,27 +126,63 @@ if page == "🏠 Home":
                 else:
                     st.markdown('<p class="result-bad">❌ Not Recommended 😞</p>', unsafe_allow_html=True)
 
+                # Metrics
                 col1, col2 = st.columns(2)
                 col1.metric("🎯 Confidence", f"{confidence:.2f}")
-                col2.metric("📏 Review Length", len(review))
+                col2.metric("📏 Characters", review_length)
+
+                col3, col4 = st.columns(2)
+                col3.metric("📝 Words", word_count)
+                col4.metric("📊 Probability (Recommended)", f"{prob_rec:.2f}")
 
                 st.progress(int(confidence * 100))
 
                 st.markdown('</div>', unsafe_allow_html=True)
 
-            # Explanation expanders
+            # Probability breakdown
+            st.markdown("### 📊 Prediction Breakdown")
+            col1, col2 = st.columns(2)
+            col1.metric("❌ Not Recommended", f"{prob_not_rec:.2f}")
+            col2.metric("✅ Recommended", f"{prob_rec:.2f}")
+
+            # Gauge
+            st.markdown("### 🎯 Confidence Meter")
+            show_confidence_gauge(confidence)
+
+            # Confidence level message
+            if confidence > 0.75:
+                st.success("🔥 High confidence prediction")
+            elif confidence > 0.5:
+                st.info("⚖️ Moderate confidence")
+            else:
+                st.warning("⚠️ Low confidence prediction")
+
+            # Explanation sections
             with st.expander("📘 How is Confidence Calculated?"):
-                st.write("""
-                The model outputs probabilities for each class using Logistic Regression.
-                The confidence score is the highest probability value.
+                st.write(f"""
+                The model predicts probabilities for two classes:
+
+                - Not Recommended (0): {prob_not_rec:.2f}  
+                - Recommended (1): {prob_rec:.2f}
+
+                The predicted class is the one with the higher probability.
+
+                Confidence Score = max(probabilities)
+
+                In this case:
+                Confidence = {confidence:.2f}
                 """)
 
             with st.expander("📏 How is Review Length Calculated?"):
-                st.write("""
-                Review length is the number of characters in the input text.
+                st.write(f"""
+                Characters = len(review) → {review_length}
+
+                Words = len(review.split()) → {word_count}
+
+                This helps understand how detailed the review is.
                 """)
 
-# ---------------- MODEL INSIGHTS ----------------
+# ================= MODEL =================
 elif page == "🤖 Model Insights":
 
     st.header("🤖 Model Insights")
@@ -128,10 +191,10 @@ elif page == "🤖 Model Insights":
     st.write("""
     - Model: Logistic Regression  
     - Text Processing: TF-IDF Vectorization  
-    - Tuning: GridSearchCV  
+    - Hyperparameter Tuning: GridSearchCV  
     """)
 
-    st.markdown("### 📊 Performance Metrics")
+    st.markdown("### 📊 Model Performance")
 
     col1, col2 = st.columns(2)
     col1.metric("Accuracy", "0.87")
@@ -141,13 +204,13 @@ elif page == "🤖 Model Insights":
 
     with st.expander("📘 What do these metrics mean?"):
         st.write("""
-        Accuracy: Overall correctness  
+        Accuracy: Overall correctness of the model  
         Precision: Correct positive predictions  
         Recall: Coverage of actual positives  
-        F1 Score: Balance between precision & recall  
+        F1 Score: Balance between precision and recall  
         """)
 
-# ---------------- DATASET ----------------
+# ================= DATASET =================
 elif page == "📂 Dataset Info":
 
     st.header("📂 Dataset Info")
