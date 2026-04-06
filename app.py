@@ -2,7 +2,6 @@ import streamlit as st
 import joblib
 import pandas as pd
 import plotly.graph_objects as go
-import time
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(page_title="Product Recommendation Calculator", layout="wide")
@@ -91,6 +90,7 @@ if page == "🏠 Review Analysis":
         with st.container():
             st.markdown('<div class="card">', unsafe_allow_html=True)
 
+            # Metrics
             col1, col2 = st.columns(2)
             col1.metric("📏 Characters", review_length)
             col2.metric("📝 Words", word_count)
@@ -109,36 +109,6 @@ if page == "🏠 Review Analysis":
 
             st.markdown('</div>', unsafe_allow_html=True)
 
-        # ---------------- CONFIDENCE VISUAL ----------------
-        st.markdown('<p class="section-title">📊 Confidence Visualization</p>', unsafe_allow_html=True)
-
-        # Layout: Left 0% | Bar | Right %
-        col1, col2, col3 = st.columns([1, 6, 1])
-        col1.markdown("**0%**")
-        progress_placeholder = col2.empty()
-        percent_placeholder = col3.empty()
-
-        # Animate progress bar
-        for i in range(int(confidence * 100) + 1):
-            time.sleep(0.01)
-            progress_placeholder.progress(i)
-            percent_placeholder.markdown(f"**{i}%**")
-
-        # X-axis labels under bar
-        st.markdown(
-            "<div style='display:flex; justify-content: space-between; font-weight:600;'>"
-            "<span>0</span><span>20</span><span>40</span><span>60</span><span>80</span><span>100</span>"
-            "</div>", unsafe_allow_html=True
-        )
-
-        # Confidence status
-        if confidence > 0.75:
-            st.success(f"🔥 High Confidence ({confidence*100:.0f}%)")
-        elif confidence > 0.5:
-            st.info(f"⚖️ Moderate Confidence ({confidence*100:.0f}%)")
-        else:
-            st.warning(f"⚠️ Low Confidence ({confidence*100:.0f}%)")
-
         # ---------------- PROBABILITY BREAKDOWN ----------------
         st.markdown('<p class="section-title">📊 Probability Breakdown</p>', unsafe_allow_html=True)
 
@@ -156,13 +126,17 @@ if page == "🏠 Review Analysis":
 
         st.caption("Left: Not Recommended | Right: Recommended")
 
-        # ---------------- GAUGE ----------------
+        # ---------------- CONFIDENCE METER ----------------
+        st.markdown('<p class="section-title">🎯 Confidence Meter</p>', unsafe_allow_html=True)
+
         fig = go.Figure(go.Indicator(
             mode="gauge+number",
             value=confidence * 100,
-            title={'text': "Confidence Meter"},
+            number={'suffix': "%"},
+            title={'text': "Confidence"},
             gauge={
                 'axis': {'range': [0, 100], 'tickvals':[0,20,40,60,80,100]},
+                'bar': {'color': "#2563eb"},
                 'steps': [
                     {'range': [0, 50], 'color': "#ef4444"},
                     {'range': [50, 75], 'color': "#f59e0b"},
