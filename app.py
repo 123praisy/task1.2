@@ -9,14 +9,14 @@ import time
 st.set_page_config(page_title="Product Recommendation Calculator", layout="wide")
 
 # ---------------- LOAD MODEL ----------------
-model = joblib.load("model.joblib")
-vectorizer = joblib.load("vectorizer.joblib")
+model = joblib.load("model.pkl")
+vectorizer = joblib.load("vectorizer.pkl")
 
 # ---------------- LOAD DATA ----------------
 df = pd.read_csv("Womens Clothing E-Commerce Reviews.csv")
 df = df.dropna(subset=["Review Text"])
 
-# ---------------- CLEAN UI CSS ----------------
+# ---------------- UI STYLE ----------------
 st.markdown("""
 <style>
 .stApp {
@@ -41,10 +41,10 @@ st.markdown("""
 
 /* SECTION TITLE */
 .section-title {
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 600;
     color: #374151;
-    margin-top: 20px;
+    margin-top: 25px;
 }
 
 /* CARD */
@@ -58,12 +58,12 @@ st.markdown("""
 /* RESULT */
 .result-good {
     color: #16a34a;
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 600;
 }
 .result-bad {
     color: #dc2626;
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 600;
 }
 
@@ -98,6 +98,7 @@ if page == "🏠 Review Analysis":
     else:
         filtered_df = df
 
+    # SEARCH
     search = st.text_input("🔎 Search Reviews")
 
     if search:
@@ -107,7 +108,6 @@ if page == "🏠 Review Analysis":
 
     # INPUT
     example = st.selectbox("📌 Choose Sample Review", [""] + reviews)
-
     review = st.text_area("✍️ Enter Review", value=example, height=120)
 
     col1, col2 = st.columns(2)
@@ -138,7 +138,6 @@ if page == "🏠 Review Analysis":
         with st.container():
             st.markdown('<div class="card">', unsafe_allow_html=True)
 
-            # RESULT TEXT (PLACED BELOW METRICS)
             col1, col2 = st.columns(2)
             col1.metric("📏 Characters", review_length)
             col2.metric("📝 Words", word_count)
@@ -149,7 +148,7 @@ if page == "🏠 Review Analysis":
 
             st.markdown("<br>", unsafe_allow_html=True)
 
-            # RESULT BELOW (AS YOU WANTED)
+            # RESULT TEXT
             if prediction == 1:
                 st.markdown(f'<p class="result-good">✅ Likely Recommended</p>', unsafe_allow_html=True)
             else:
@@ -157,36 +156,36 @@ if page == "🏠 Review Analysis":
 
             st.markdown('</div>', unsafe_allow_html=True)
 
-        # ---------------- ANIMATED BARS ----------------
-
+        # ---------------- CONFIDENCE VISUAL ----------------
         st.markdown('<p class="section-title">📊 Confidence Visualization</p>', unsafe_allow_html=True)
 
         progress_bar = st.progress(0)
-        status_text = st.empty()
+        percent_text = st.empty()
 
         for i in range(int(confidence * 100)):
             time.sleep(0.01)
             progress_bar.progress(i + 1)
+            percent_text.markdown(f"### {i+1}%")
 
         if confidence > 0.75:
-            status_text.success("High confidence in prediction")
+            st.success(f"🔥 High Confidence ({confidence*100:.0f}%)")
         elif confidence > 0.5:
-            status_text.info("Moderate confidence level")
+            st.info(f"⚖️ Moderate Confidence ({confidence*100:.0f}%)")
         else:
-            status_text.warning("Low confidence - prediction uncertain")
+            st.warning(f"⚠️ Low Confidence ({confidence*100:.0f}%)")
 
-        # ---------------- PROBABILITY BARS ----------------
-
+        # ---------------- PROBABILITY BREAKDOWN ----------------
         st.markdown('<p class="section-title">📊 Probability Breakdown</p>', unsafe_allow_html=True)
 
-        st.write("Recommended")
-        st.progress(int(prob_yes * 100))
+        left, center, right = st.columns([2, 6, 2])
 
-        st.write("Not Recommended")
-        st.progress(int(prob_not * 100))
+        left.markdown(f"❌ **{prob_not*100:.0f}%**")
+        center.progress(int(prob_yes * 100))
+        right.markdown(f"**{prob_yes*100:.0f}%** ✅")
+
+        st.caption("Left: Not Recommended | Right: Recommended")
 
         # ---------------- GAUGE ----------------
-
         fig = go.Figure(go.Indicator(
             mode="gauge+number",
             value=confidence * 100,
