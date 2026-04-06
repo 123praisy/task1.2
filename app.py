@@ -2,7 +2,6 @@ import streamlit as st
 import joblib
 import pandas as pd
 import plotly.graph_objects as go
-import random
 import time
 
 # ---------------- PAGE CONFIG ----------------
@@ -22,7 +21,6 @@ st.markdown("""
 .stApp {
     background-color: #f5f7fb;
 }
-
 /* MAIN TITLE */
 .main-title {
     font-size: 48px;
@@ -30,7 +28,6 @@ st.markdown("""
     text-align: center;
     color: #1f2937;
 }
-
 /* SUBTITLE */
 .subtitle {
     font-size: 18px;
@@ -38,7 +35,6 @@ st.markdown("""
     color: #6b7280;
     margin-bottom: 30px;
 }
-
 /* SECTION TITLE */
 .section-title {
     font-size: 22px;
@@ -46,7 +42,6 @@ st.markdown("""
     color: #374151;
     margin-top: 25px;
 }
-
 /* CARD */
 .card {
     padding: 25px;
@@ -54,7 +49,6 @@ st.markdown("""
     background: white;
     box-shadow: 0px 6px 18px rgba(0,0,0,0.08);
 }
-
 /* RESULT */
 .result-good {
     color: #16a34a;
@@ -66,7 +60,6 @@ st.markdown("""
     font-size: 20px;
     font-weight: 600;
 }
-
 /* BUTTON */
 .stButton>button {
     border-radius: 10px;
@@ -80,7 +73,6 @@ st.markdown("""
 # ---------------- HEADER ----------------
 st.markdown('<p class="main-title">🛍️ Product Recommendation Calculator Based on Reviews</p>', unsafe_allow_html=True)
 st.markdown('<p class="subtitle">Analyze customer reviews to estimate product recommendation likelihood</p>', unsafe_allow_html=True)
-
 st.markdown("---")
 
 # ---------------- SIDEBAR ----------------
@@ -88,7 +80,6 @@ page = st.sidebar.radio("Navigation", ["🏠 Review Analysis", "📈 Model Perfo
 
 # ================= HOME =================
 if page == "🏠 Review Analysis":
-
     st.markdown('<p class="section-title">🔍 Review Analysis</p>', unsafe_allow_html=True)
 
     # FILTER
@@ -100,7 +91,6 @@ if page == "🏠 Review Analysis":
 
     # SEARCH
     search = st.text_input("🔎 Search Reviews")
-
     if search:
         filtered_df = filtered_df[filtered_df["Review Text"].str.contains(search, case=False)]
 
@@ -119,9 +109,7 @@ if page == "🏠 Review Analysis":
 
     # ---------------- PREDICTION ----------------
     if analyze and review.strip() != "":
-
         review_tfidf = vectorizer.transform([review])
-
         prediction = model.predict(review_tfidf)[0]
         prob = model.predict_proba(review_tfidf)[0]
 
@@ -159,13 +147,15 @@ if page == "🏠 Review Analysis":
         # ---------------- CONFIDENCE VISUAL ----------------
         st.markdown('<p class="section-title">📊 Confidence Visualization</p>', unsafe_allow_html=True)
 
-        progress_bar = st.progress(0)
-        percent_text = st.empty()
+        col1, col2, col3 = st.columns([1, 6, 1])
+        col1.markdown("**0%**")
+        progress_placeholder = col2.empty()
+        percent_placeholder = col3.empty()
 
-        for i in range(int(confidence * 100)):
+        for i in range(int(confidence * 100) + 1):
             time.sleep(0.01)
-            progress_bar.progress(i + 1)
-            percent_text.markdown(f"### {i+1}%")
+            progress_placeholder.progress(i)
+            percent_placeholder.markdown(f"**{i}%**")
 
         if confidence > 0.75:
             st.success(f"🔥 High Confidence ({confidence*100:.0f}%)")
@@ -177,11 +167,17 @@ if page == "🏠 Review Analysis":
         # ---------------- PROBABILITY BREAKDOWN ----------------
         st.markdown('<p class="section-title">📊 Probability Breakdown</p>', unsafe_allow_html=True)
 
-        left, center, right = st.columns([2, 6, 2])
+        # Recommended
+        st.markdown("**✅ Recommended**")
+        col1, col2 = st.columns([8, 2])
+        col1.progress(int(prob_yes * 100))
+        col2.markdown(f"**{prob_yes*100:.0f}%**")
 
-        left.markdown(f"❌ **{prob_not*100:.0f}%**")
-        center.progress(int(prob_yes * 100))
-        right.markdown(f"**{prob_yes*100:.0f}%** ✅")
+        # Not Recommended
+        st.markdown("**❌ Not Recommended**")
+        col3, col4 = st.columns([8, 2])
+        col3.progress(int(prob_not * 100))
+        col4.markdown(f"**{prob_not*100:.0f}%**")
 
         st.caption("Left: Not Recommended | Right: Recommended")
 
@@ -199,14 +195,11 @@ if page == "🏠 Review Analysis":
                 ],
             }
         ))
-
         st.plotly_chart(fig, use_container_width=True)
 
 # ================= MODEL =================
 elif page == "📈 Model Performance":
-
     st.markdown('<p class="section-title">📈 Model Performance</p>', unsafe_allow_html=True)
-
     col1, col2 = st.columns(2)
     col1.metric("Accuracy", "0.87")
     col1.metric("Precision", "0.85")
@@ -215,7 +208,6 @@ elif page == "📈 Model Performance":
 
 # ================= DATASET =================
 elif page == "📂 Dataset":
-
     st.markdown('<p class="section-title">📂 Dataset Preview</p>', unsafe_allow_html=True)
     st.dataframe(df.head(50))
 
