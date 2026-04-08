@@ -7,7 +7,7 @@ import time
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(page_title="Product Recommendation Calculator", layout="wide")
 
-# ---------------- LOAD MODEL (CACHED) ----------------
+# ---------------- LOAD MODEL ----------------
 @st.cache_resource
 def load_model():
     model = joblib.load("model.pkl")
@@ -27,43 +27,42 @@ def load_data():
 
 df, text_col = load_data()
 
-# ---------------- UI STYLE ----------------
+# ---------------- DARK UI STYLE ----------------
 st.markdown("""
 <style>
 .stApp {
-    background-color: #f5f7fb;
+    background-color: #0e1117;
+    color: white;
 }
 .main-title {
     font-size: 60px;
     font-weight: 800;
     text-align:center;
-    color: black;
+    color: white;
 }
 .subtitle {
     font-size: 18px;
     text-align: center;
-    color: #6b7280;
-    margin-bottom: 30px;
+    color: #9ca3af;
 }
 .section-title {
     font-size: 22px;
     font-weight: 600;
-    color: #374151;
-    margin-top: 25px;
+    color: #e5e7eb;
 }
 .card {
     padding: 25px;
     border-radius: 15px;
-    background: white;
-    box-shadow: 0px 6px 18px rgba(0,0,0,0.08);
+    background: #1f2937;
+    box-shadow: 0px 6px 18px rgba(0,0,0,0.5);
 }
 .result-good {
-    color: #16a34a;
+    color: #22c55e;
     font-size: 20px;
     font-weight: 600;
 }
 .result-bad {
-    color: #dc2626;
+    color: #ef4444;
     font-size: 20px;
     font-weight: 600;
 }
@@ -155,9 +154,12 @@ if page == "Review Analysis":
             # ---------------- CONFIDENCE BAR ----------------
             st.markdown('<p class="section-title">📊 Confidence</p>', unsafe_allow_html=True)
 
+            progress_bar = st.progress(0)
             for i in range(int(confidence * 100) + 1):
                 time.sleep(0.005)
-                st.progress(i)
+                progress_bar.progress(i)
+
+            st.markdown(f"### Confidence: {confidence*100:.1f}%")
 
             # ---------------- PROBABILITY ----------------
             st.markdown('<p class="section-title">📊 Probability Breakdown</p>', unsafe_allow_html=True)
@@ -198,7 +200,7 @@ elif page == "Model Performance":
         col2.metric("F1 Score", f"{metrics['f1']:.2f}")
 
     except:
-        st.warning("Metrics file not found. Showing default values.")
+        st.warning("Metrics file not found.")
         col1, col2 = st.columns(2)
         col1.metric("Accuracy", "N/A")
         col1.metric("Precision", "N/A")
