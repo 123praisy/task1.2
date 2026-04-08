@@ -2,6 +2,7 @@ import streamlit as st
 import joblib
 import pandas as pd
 import plotly.graph_objects as go
+import plotly.express as px
 import time
 
 # ---------------- PAGE CONFIG ----------------
@@ -25,7 +26,7 @@ st.markdown("""
 
 /* TITLE */
 .main-title {
-    font-size: 60px;
+    font-size: 80px;
     font-weight: 800;
     text-align:center;
     color: white;
@@ -149,7 +150,7 @@ if page == "Review Analysis":
         st.markdown("---")
         st.markdown('<p class="section-title">Analysis Results</p>', unsafe_allow_html=True)
 
-        # ----------- MODERN METRIC CARDS -----------
+        # ----------- METRIC CARDS -----------
         col1, col2, col3, col4 = st.columns(4)
 
         col1.markdown(f"""
@@ -180,14 +181,12 @@ if page == "Review Analysis":
         </div>
         """, unsafe_allow_html=True)
 
-        st.markdown("<br>", unsafe_allow_html=True)
-
         if prediction == 1:
             st.markdown('<p class="result-good">✅ Likely Recommended</p>', unsafe_allow_html=True)
         else:
             st.markdown('<p class="result-bad">❌ Likely Not Recommended</p>', unsafe_allow_html=True)
 
-        # ---------------- CONFIDENCE VISUAL (ANIMATED) ----------------
+        # ---------------- CONFIDENCE ANIMATION ----------------
         st.markdown('<p class="section-title">Confidence Visualization</p>', unsafe_allow_html=True)
 
         col_left, col_bar, col_right = st.columns([1, 6, 1])
@@ -202,15 +201,6 @@ if page == "Review Analysis":
             time.sleep(0.01)
 
         col_right.markdown(f"<p style='color:white;'>{progress_value}%</p>", unsafe_allow_html=True)
-
-        # ---------------- PROBABILITY ----------------
-        st.markdown('<p class="section-title">Probability Breakdown</p>', unsafe_allow_html=True)
-
-        st.markdown("**✅ Recommended**")
-        st.progress(int(prob_yes * 100))
-
-        st.markdown("**❌ Not Recommended**")
-        st.progress(int(prob_not * 100))
 
         # ---------------- GAUGE ----------------
         fig = go.Figure(go.Indicator(
@@ -229,16 +219,40 @@ if page == "Review Analysis":
 
         st.plotly_chart(fig, use_container_width=True)
 
-# ================= MODEL =================
+# ================= MODEL PERFORMANCE =================
 elif page == "Model Performance":
 
     st.markdown('<p class="section-title">Model Performance</p>', unsafe_allow_html=True)
 
+    # WHITE CARD
+    st.markdown('<div style="background:white; padding:25px; border-radius:15px;">', unsafe_allow_html=True)
+
     col1, col2 = st.columns(2)
-    col1.metric("Accuracy", "0.87")
-    col1.metric("Precision", "0.85")
-    col2.metric("Recall", "0.83")
-    col2.metric("F1 Score", "0.84")
+    col1.metric("📈 Accuracy", "0.87")
+    col1.metric("🎯 Precision", "0.85")
+    col2.metric("📊 Recall", "0.83")
+    col2.metric("⚖️ F1 Score", "0.84")
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # -------- BAR CHART --------
+    st.markdown('<p class="section-title">Performance Comparison</p>', unsafe_allow_html=True)
+
+    metrics_df = pd.DataFrame({
+        "Metric": ["Accuracy", "Precision", "Recall", "F1 Score"],
+        "Score": [0.87, 0.85, 0.83, 0.84]
+    })
+
+    fig = px.bar(metrics_df, x="Metric", y="Score", text="Score")
+
+    fig.update_traces(textposition='outside')
+    fig.update_layout(
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='white')
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
 
 # ================= DATASET =================
 elif page == "Dataset":
