@@ -166,14 +166,20 @@ if page == "Review Analysis":
         # ---------------- CONFIDENCE BAR ----------------
         st.markdown('<p class="section-title">Confidence Visualization</p>', unsafe_allow_html=True)
 
-        col_left, col_bar, col_right = st.columns([1, 6, 1])
+      col_left, col_bar, col_right = st.columns([1, 6, 1])
 
-        col_left.markdown("<p style='color:white;'>0%</p>", unsafe_allow_html=True)
+    col_left.markdown("<p style='color:white;'>0%</p>", unsafe_allow_html=True)
 
-        progress = int(confidence * 100)
-        col_bar.progress(progress)
+    progress_placeholder = col_bar.empty()
+    progress_value = int(confidence * 100)
 
-        col_right.markdown(f"<p style='color:white;'>{progress}%</p>", unsafe_allow_html=True)
+    # animation
+    for i in range(progress_value + 1):
+    progress_placeholder.progress(i)
+    time.sleep(0.01)  # control speed (reduce to 0.005 for faster)
+
+    col_right.markdown(f"<p style='color:white;'>{progress_value}%</p>", unsafe_allow_html=True)
+    time.sleep(0.02)   # slower
 
         # ---------------- PROBABILITY BREAKDOWN ----------------
         st.markdown('<p class="section-title">Probability Breakdown</p>', unsafe_allow_html=True)
