@@ -19,11 +19,11 @@ df = df.dropna(subset=["Review Text"])
 st.markdown("""
 <style>
 .stApp {
-    background-color: #1e3a8a; /* dark blue */
+    background-color: #1e3a8a;
     color: white;
 }
 
-/* MAIN TITLE */
+/* TITLE */
 .main-title {
     font-size: 60px;
     font-weight: 800;
@@ -31,7 +31,6 @@ st.markdown("""
     color: white;
 }
 
-/* SUBTITLE */
 .subtitle {
     font-size: 18px;
     text-align: center;
@@ -39,7 +38,6 @@ st.markdown("""
     margin-bottom: 30px;
 }
 
-/* SECTION TITLE */
 .section-title {
     font-size: 22px;
     font-weight: 600;
@@ -48,9 +46,8 @@ st.markdown("""
 }
 
 /* INPUT LABELS */
-label, .stTextInput label, .stTextArea label, .stSelectbox label {
+label {
     color: white !important;
-    font-weight: 500;
 }
 
 /* BUTTON */
@@ -71,6 +68,26 @@ label, .stTextInput label, .stTextArea label, .stSelectbox label {
     color: #ef4444;
     font-size: 20px;
     font-weight: 600;
+}
+
+/* METRIC CARDS */
+.metric-card {
+    background: rgba(255,255,255,0.08);
+    padding: 20px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0px 4px 15px rgba(0,0,0,0.2);
+}
+
+.metric-title {
+    font-size: 16px;
+    color: #d1d5db;
+}
+
+.metric-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: white;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -132,13 +149,38 @@ if page == "Review Analysis":
         st.markdown("---")
         st.markdown('<p class="section-title">Analysis Results</p>', unsafe_allow_html=True)
 
-        col1, col2 = st.columns(2)
-        col1.metric("Characters", review_length)
-        col2.metric("Words", word_count)
+        # ----------- MODERN METRIC CARDS -----------
+        col1, col2, col3, col4 = st.columns(4)
 
-        col3, col4 = st.columns(2)
-        col3.metric("Recommendation Probability", f"{prob_yes:.2f}")
-        col4.metric("Confidence Score", f"{confidence:.2f}")
+        col1.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-title">📝 Characters</div>
+            <div class="metric-value">{review_length}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        col2.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-title">🔤 Words</div>
+            <div class="metric-value">{word_count}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        col3.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-title">📊 Recommendation</div>
+            <div class="metric-value">{prob_yes:.2f}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        col4.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-title">🎯 Confidence</div>
+            <div class="metric-value">{confidence:.2f}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
 
         if prediction == 1:
             st.markdown('<p class="result-good">✅ Likely Recommended</p>', unsafe_allow_html=True)
