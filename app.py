@@ -18,43 +18,62 @@ df = df.dropna(subset=["Review Text"])
 # ---------------- UI STYLE ----------------
 st.markdown("""
 <style>
+
+/* BACKGROUND */
 .stApp {
-    background-color: #1e293b;  /* dark blue-grey */
+    background-color: #1e293b;
 }
 
-/* MAIN TITLE */
+/* TEXT COLORS */
+label, .stTextInput label, .stTextArea label, .stSelectbox label {
+    color: white !important;
+    font-weight: 600;
+}
+
+/* INPUT BOXES */
+.stTextInput>div>div>input,
+.stTextArea textarea,
+.stSelectbox div[data-baseweb="select"] {
+    background-color: #2563eb !important;
+    color: white !important;
+    border-radius: 8px;
+}
+
+/* PLACEHOLDER TEXT */
+input::placeholder, textarea::placeholder {
+    color: #e0e7ff !important;
+}
+
+/* TITLES */
 .main-title {
-    font-size: 100px;
+    font-size: 60px;
     font-weight: 800;
     text-align:center;
     color: white;
 }
 
-/* SUBTITLE */
 .subtitle {
     font-size: 18px;
     text-align: center;
     color: #cbd5f5;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
 }
 
-/* SECTION TITLE */
 .section-title {
     font-size: 22px;
     font-weight: 600;
-    color: #e2e8f0;
-    margin-top: 25px;
+    color: white;
+    margin-top: 20px;
 }
 
-/* CARD */
-.card {
-    padding: 25px;
-    border-radius: 15px;
-    background: #334155;
-    box-shadow: 0px 6px 18px rgba(0,0,0,0.4);
+/* METRICS TEXT */
+.metric-text {
+    color: white;
+    font-size: 18px;
+    font-weight: 500;
 }
 
-/* RESULT */
+/* RESULT TEXT */
 .result-good {
     color: #22c55e;
     font-size: 20px;
@@ -73,19 +92,20 @@ st.markdown("""
     color: white;
     font-weight: 600;
 }
+
 </style>
 """, unsafe_allow_html=True)
 
 # ---------------- HEADER ----------------
-st.markdown('<p class="main-title"> PRODUCT RECOMMENDATION CALCULATOR BASED ON REVIEWS</p>', unsafe_allow_html=True)
-st.markdown('<p class="subtitle">Analyze customer reviews to estimate product recommendation likelihood</p>', unsafe_allow_html=True)
-st.markdown("---")
+st.markdown('<p class="main-title">PRODUCT RECOMMENDATION CALCULATOR</p>', unsafe_allow_html=True)
+st.markdown('<p class="subtitle">Analyze customer reviews to predict recommendation likelihood</p>', unsafe_allow_html=True)
 
 # ---------------- SIDEBAR ----------------
 page = st.sidebar.radio("Navigation", ["Review Analysis", "Model Performance", "Dataset"])
 
-# ================= HOME =================
+# ================= REVIEW ANALYSIS =================
 if page == "Review Analysis":
+
     st.markdown('<p class="section-title">Review Analysis</p>', unsafe_allow_html=True)
 
     # FILTER
@@ -97,6 +117,7 @@ if page == "Review Analysis":
 
     # SEARCH
     search = st.text_input("Search Reviews")
+
     if search:
         filtered_df = filtered_df[filtered_df["Review Text"].str.contains(search, case=False)]
 
@@ -126,58 +147,42 @@ if page == "Review Analysis":
         review_length = len(review)
         word_count = len(review.split())
 
-        st.markdown("---")
+        # ---------------- RESULTS ----------------
         st.markdown('<p class="section-title">Analysis Results</p>', unsafe_allow_html=True)
 
-        with st.container():
-            st.markdown('<div class="card">', unsafe_allow_html=True)
+        col1, col2 = st.columns(2)
+        col1.markdown(f'<p class="metric-text">Characters: {review_length}</p>', unsafe_allow_html=True)
+        col2.markdown(f'<p class="metric-text">Words: {word_count}</p>', unsafe_allow_html=True)
 
-            col1, col2 = st.columns(2)
-            col1.metric("Characters", review_length)
-            col2.metric("Words", word_count)
+        col3, col4 = st.columns(2)
+        col3.markdown(f'<p class="metric-text">Recommendation Probability: {prob_yes:.2f}</p>', unsafe_allow_html=True)
+        col4.markdown(f'<p class="metric-text">Confidence Score: {confidence:.2f}</p>', unsafe_allow_html=True)
 
-            col3, col4 = st.columns(2)
-            col3.metric("Recommendation Probability", f"{prob_yes:.2f}")
-            col4.metric("Confidence Score", f"{confidence:.2f}")
-
-            st.markdown("<br>", unsafe_allow_html=True)
-
-            if prediction == 1:
-                st.markdown(f'<p class="result-good">✅ Likely Recommended</p>', unsafe_allow_html=True)
-            else:
-                st.markdown(f'<p class="result-bad">❌ Likely Not Recommended</p>', unsafe_allow_html=True)
-
-            st.markdown('</div>', unsafe_allow_html=True)
-
-        # ---------------- CONFIDENCE VISUAL ----------------
-        st.markdown('<p class="section-title">📊 Confidence Visualization</p>', unsafe_allow_html=True)
-
-        progress_bar = st.progress(0)
-        for i in range(int(confidence * 100) + 1):
-            time.sleep(0.01)
-            progress_bar.progress(i)
-
-        if confidence > 0.75:
-            st.success(f"🔥 High Confidence ({confidence*100:.0f}%)")
-        elif confidence > 0.5:
-            st.info(f"⚖️ Moderate Confidence ({confidence*100:.0f}%)")
+        if prediction == 1:
+            st.markdown('<p class="result-good">✅ Likely Recommended</p>', unsafe_allow_html=True)
         else:
-            st.warning(f"⚠️ Low Confidence ({confidence*100:.0f}%)")
+            st.markdown('<p class="result-bad">❌ Likely Not Recommended</p>', unsafe_allow_html=True)
+
+        # ---------------- CONFIDENCE BAR ----------------
+        st.markdown('<p class="section-title">Confidence Visualization</p>', unsafe_allow_html=True)
+
+        col_left, col_bar, col_right = st.columns([1, 6, 1])
+
+        col_left.markdown("<p style='color:white;'>0%</p>", unsafe_allow_html=True)
+
+        progress = int(confidence * 100)
+        col_bar.progress(progress)
+
+        col_right.markdown(f"<p style='color:white;'>{progress}%</p>", unsafe_allow_html=True)
 
         # ---------------- PROBABILITY BREAKDOWN ----------------
-        st.markdown('<p class="section-title">📊 Probability Breakdown</p>', unsafe_allow_html=True)
+        st.markdown('<p class="section-title">Probability Breakdown</p>', unsafe_allow_html=True)
 
-        st.markdown("**✅ Recommended**")
-        col1, col2 = st.columns([8, 2])
-        col1.progress(int(prob_yes * 100))
-        col2.markdown(f"**{prob_yes*100:.0f}%**")
+        st.markdown("<span style='color:white;'>Recommended</span>", unsafe_allow_html=True)
+        st.progress(int(prob_yes * 100))
 
-        st.markdown("**❌ Not Recommended**")
-        col3, col4 = st.columns([8, 2])
-        col3.progress(int(prob_not * 100))
-        col4.markdown(f"**{prob_not*100:.0f}%**")
-
-        st.caption("Left: Not Recommended | Right: Recommended")
+        st.markdown("<span style='color:white;'>Not Recommended</span>", unsafe_allow_html=True)
+        st.progress(int(prob_not * 100))
 
         # ---------------- GAUGE ----------------
         fig = go.Figure(go.Indicator(
@@ -198,6 +203,7 @@ if page == "Review Analysis":
 # ================= MODEL =================
 elif page == "Model Performance":
     st.markdown('<p class="section-title">Model Performance</p>', unsafe_allow_html=True)
+
     col1, col2 = st.columns(2)
     col1.metric("Accuracy", "0.87")
     col1.metric("Precision", "0.85")
@@ -210,5 +216,4 @@ elif page == "Dataset":
     st.dataframe(df.head(50))
 
 # ---------------- FOOTER ----------------
-st.markdown("---")
 st.caption("Smart review analysis for product recommendation insights")
