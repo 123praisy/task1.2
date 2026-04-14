@@ -22,6 +22,8 @@ if "cart" not in st.session_state:
     st.session_state.cart = []
 if "purchased" not in st.session_state:
     st.session_state.purchased = None
+if "confirm_purchase" not in st.session_state:
+    st.session_state.confirm_purchase = False
 
 # ---------------- STYLE ----------------
 st.markdown("""
@@ -131,15 +133,33 @@ if page == "Review Analysis":
 
         if st.button("Purchase Best Product"):
             st.session_state.purchased = best_product
+            st.session_state.confirm_purchase = True
 
-    # -------- AFTER PURCHASE --------
-    if st.session_state.purchased:
+    # -------- PURCHASE FLOW --------
+    if st.session_state.confirm_purchase:
 
-        st.success("🎉 Thank you for shopping!")
+        st.subheader("🛍 Confirm Your Purchase")
 
-        st.subheader("Write Your Review")
+        selected_purchase = st.selectbox(
+            "Select product you want to purchase from cart",
+            st.session_state.cart
+        )
 
-        review = st.text_area("Please give your review")
+        if st.button("Confirm Purchase ✅"):
+            st.session_state.purchased = selected_purchase
+            st.session_state.confirm_purchase = False
+            st.success("🎉 Thank you for choosing highly recommended product!")
+
+    # -------- REVIEW AFTER PURCHASE --------
+    if st.session_state.purchased and not st.session_state.confirm_purchase:
+
+        st.markdown("---")
+        st.subheader("📝 Please give your review on the product received")
+
+        st.write(f"Product ID: {st.session_state.purchased.split(' - ')[0]}")
+        st.write(f"Product Name: {st.session_state.purchased.split(' - ')[1]}")
+
+        review = st.text_area("Write your review")
 
         if st.button("Submit Review"):
 
@@ -155,8 +175,8 @@ if page == "Review Analysis":
 
             df.to_csv("Womens Clothing E-Commerce Reviews.csv", index=False)
 
-            st.success("Review submitted successfully!")
-            st.info("New review added to dataset")
+            st.success("✅ Thanks for your review!")
+            st.info("📁 This review has been added to the dataset")
 
 # ================= MODEL PERFORMANCE =================
 elif page == "Model Performance":
@@ -181,7 +201,6 @@ elif page == "EDA Analysis":
     fig = px.histogram(df, x='review_length')
     st.plotly_chart(fig)
 
-    # Correlation
     st.subheader("Correlation Matrix")
     corr = df.select_dtypes(include='number').corr()
     fig, ax = plt.subplots()
