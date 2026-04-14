@@ -2,201 +2,177 @@ import streamlit as st
 import joblib
 import pandas as pd
 import plotly.graph_objects as go
-import plotly.express as px
 import time
 from wordcloud import WordCloud
 
-# ---------------- PAGE CONFIG ----------------
 st.set_page_config(page_title="Product Recommendation Calculator", layout="wide")
 
-# ---------------- LOAD MODEL ----------------
 model = joblib.load("model.pkl")
 vectorizer = joblib.load("vectorizer.pkl")
 
-# ---------------- LOAD DATA ----------------
 df = pd.read_csv("Womens Clothing E-Commerce Reviews.csv")
 df = df.dropna(subset=["Review Text"])
 
-# ---------------- SESSION STATE ----------------
 if "cart" not in st.session_state:
     st.session_state.cart = []
 
-# ---------------- UI STYLE ----------------
+if "purchased" not in st.session_state:
+    st.session_state.purchased = None
+
+# ================= STYLE =================
 st.markdown("""
 <style>
-.stApp { background-color: #1e3a8a; color: white; }
-.main-title { font-size: 60px; font-weight: 800; text-align: center; color: white; }
-.subtitle { font-size: 18px; text-align: center; color: #d1d5db; }
+.stApp { background-color:#1e3a8a; color:white; }
 
-textarea { color: black !important; background-color: white !important; }
-label { color: white !important; }
-
-.metric-card {
-    background: rgba(255,255,255,0.08);
-    padding: 20px;
-    border-radius: 15px;
-    text-align: center;
-    transition: 0.3s;
+.main-title {
+    font-size:60px; font-weight:800; text-align:center;
 }
-.metric-card:hover {
+
+textarea { background:white !important; color:black !important; }
+
+button {
+    background:#2563eb !important;
+    color:white !important;
+    border-radius:10px !important;
+    padding:10px 20px !important;
+}
+
+button:hover {
+    background:#1d4ed8 !important;
     transform: scale(1.05);
-    background: rgba(255,255,255,0.2);
 }
-.metric-value { color: white !important; font-size: 28px; }
 
-.result-good { color: #22c55e; }
-.result-bad { color: #ef4444; }
+/* METRIC CARD */
+.metric-card {
+    background:white;
+    color:black;
+    padding:20px;
+    border-radius:15px;
+    text-align:center;
+    transition:0.3s;
+}
+
+.metric-card:hover {
+    transform:scale(1.05);
+    box-shadow:0 0 20px white;
+}
 </style>
 """, unsafe_allow_html=True)
 
-# ---------------- HEADER ----------------
+# ================= HEADER =================
 st.markdown('<p class="main-title">PRODUCT RECOMMENDATION CALCULATOR</p>', unsafe_allow_html=True)
-st.markdown('<p class="subtitle">Analyze customer reviews to estimate recommendation likelihood</p>', unsafe_allow_html=True)
 st.markdown("---")
 
-# ---------------- SIDEBAR ----------------
-page = st.sidebar.radio("Navigation", ["Review Analysis", "Model Performance", "EDA Analysis", "Dataset"])
+# ================= PRODUCT SELECTION =================
+st.subheader("🛒 Product Selection")
 
-# ================= REVIEW ANALYSIS =================
-if page == "Review Analysis":
+products = df[['Clothing ID','Class Name']].drop_duplicates().dropna()
+options = products.apply(lambda x: f"{x['Clothing ID']} - {x['Class Name']}", axis=1)
 
-    st.subheader("🛒 Product Selection")
+selected = st.selectbox("Choose a Product", options)
 
-    # Create product list
-    product_list = df[['Clothing ID', 'Class Name']].drop_duplicates().dropna()
+if st.button("➕ Add to Cart"):
+    st.session_state.cart.append(selected)
+    st.success("Added to cart!")
 
-    product_options = product_list.apply(lambda x: f"{x['Clothing ID']} - {x['Class Name']}", axis=1)
+st.write("### 🧺 Cart Items")
+for item in st.session_state.cart:
+    st.write("✔", item)
 
-    selected_product = st.selectbox("Choose a Product", product_options)
+# ================= ANALYZE =================
+if st.button("🔍 Analyze Cart") and st.session_state.cart:
 
-    if st.button("Add to Cart"):
-        st.session_state.cart.append(selected_product)
-        st.success("Added to cart ✅")
+    best_product = None
+    best_score = 0
 
-    st.write("🧺 Cart:", st.session_state.cart)
+    for item in st.session_state.cart:
 
-    # ---------------- ANALYZE CART ----------------
-    if st.button("Analyze Cart") and st.session_state.cart:
+        pid = int(item.split(" - ")[0])
+        data = df[df["Clothing ID"] == pid]
 
-        best_product = None
-        best_score = 0
+        text = " ".join(data["Review Text"])
 
-        for product in st.session_state.cart:
+        tfidf = vectorizer.transform([text])
+        prob = model.predict_proba(tfidf)[0][1]
 
-            product_id = int(product.split(" - ")[0])
+        pos = sum(data["Recommended IND"]==1)
+        neg = sum(data["Recommended IND"]==0)
 
-            product_reviews = df[df["Clothing ID"] == product_id]
+        st.markdown(f"## 🛍 {item}")
 
-            if len(product_reviews) == 0:
-                continue
+        c1,c2,c3,c4 = st.columns(4)
 
-            text = " ".join(product_reviews["Review Text"])
+        c1.markdown(f"<div class='metric-card'>Recommendation<br><b>{prob:.2f}</b></div>", unsafe_allow_html=True)
+        c2.markdown(f"<div class='metric-card'>Positive<br><b>{pos}</b></div>", unsafe_allow_html=True)
+        c3.markdown(f"<div class='metric-card'>Negative<br><b>{neg}</b></div>", unsafe_allow_html=True)
+        c4.markdown(f"<div class='metric-card'>Total<br><b>{len(data)}</b></div>", unsafe_allow_html=True)
 
-            tfidf = vectorizer.transform([text])
-            pred = model.predict(tfidf)[0]
-            prob = model.predict_proba(tfidf)[0]
+        # ===== PROGRESS BAR =====
+        st.write("Confidence Level")
 
-            confidence = float(prob[1])
+        left, bar, right = st.columns([1,6,1])
+        left.write("0%")
 
-            pos_count = sum(product_reviews["Recommended IND"] == 1)
-            neg_count = sum(product_reviews["Recommended IND"] == 0)
+        prog = int(prob*100)
+        holder = bar.empty()
 
-            st.markdown(f"### 🛍 Product {product}")
+        for i in range(prog+1):
+            holder.progress(i)
+            time.sleep(0.005)
 
-            col1, col2, col3, col4 = st.columns(4)
+        right.write(f"{prog}%")
 
-            col1.metric("Recommendation %", f"{confidence:.2f}")
-            col2.metric("Positive Reviews", pos_count)
-            col3.metric("Negative Reviews", neg_count)
-            col4.metric("Total Reviews", len(product_reviews))
+        # ===== GAUGE =====
+        fig = go.Figure(go.Indicator(
+            mode="gauge+number",
+            value=prob*100,
+            title={'text':"Confidence Meter"},
+            gauge={'axis':{'range':[0,100]}}
+        ))
+        st.plotly_chart(fig)
 
-            # Confidence bar
-            progress = int(confidence * 100)
-            progress_bar = st.empty()
-            for i in range(progress):
-                progress_bar.progress(i + 1)
-                time.sleep(0.005)
+        # Reason
+        if pos>neg:
+            st.success("Reason: High positive reviews")
+        else:
+            st.warning("Reason: Mixed feedback")
 
-            # Gauge
-            fig = go.Figure(go.Indicator(
-                mode="gauge+number",
-                value=confidence * 100,
-                title={'text': "Confidence Meter"},
-                gauge={'axis': {'range': [0, 100]}}
-            ))
-            st.plotly_chart(fig, use_container_width=True)
+        if prob>best_score:
+            best_score=prob
+            best_product=item
 
-            # Reason
-            if pos_count > neg_count:
-                st.success("Reason: More positive reviews")
-            else:
-                st.warning("Reason: Mixed or negative reviews")
+    # ===== FINAL =====
+    st.markdown("---")
+    st.subheader("🏆 Best Product")
 
-            if confidence > best_score:
-                best_score = confidence
-                best_product = product
+    st.success(f"{best_product} is highly recommended ⭐⭐⭐⭐⭐")
 
-        # ---------------- FINAL RECOMMENDATION ----------------
-        st.markdown("---")
-        st.subheader("🏆 Best Product Recommendation")
+    if st.button("🎉 Purchase Best Product"):
+        st.session_state.purchased = best_product
+        st.success("Hurray! Product purchased successfully!")
 
-        st.success(f"{best_product} is highly recommended ⭐⭐⭐⭐⭐")
+# ================= REVIEW =================
+if st.session_state.purchased:
 
-        if st.button("Purchase Best Product 🎉"):
-            st.success("Hurray! Product purchased successfully 🎉")
+    st.markdown("---")
+    st.subheader("📝 Please give your review on the product received")
 
-            st.session_state.purchased = best_product
+    review = st.text_area("Write your review")
 
-    # ---------------- USER REVIEW ----------------
-    if "purchased" in st.session_state:
+    if st.button("Submit Review"):
 
-        st.markdown("---")
-        st.subheader("📝 Give Your Review")
+        pid = int(st.session_state.purchased.split(" - ")[0])
+        pname = st.session_state.purchased.split(" - ")[1]
 
-        review_text = st.text_area("Write your review")
+        new_data = {
+            "Clothing ID": pid,
+            "Class Name": pname,
+            "Review Text": review,
+            "Recommended IND": 1
+        }
 
-        if st.button("Submit Review"):
+        df.loc[len(df)] = new_data
+        df.to_csv("Womens Clothing E-Commerce Reviews.csv", index=False)
 
-            new_row = {
-                "Clothing ID": int(st.session_state.purchased.split(" - ")[0]),
-                "Class Name": st.session_state.purchased.split(" - ")[1],
-                "Review Text": review_text,
-                "Recommended IND": 1
-            }
-
-            df.loc[len(df)] = new_row
-            df.to_csv("Womens Clothing E-Commerce Reviews.csv", index=False)
-
-            st.success("✅ Thank you for your review!")
-            st.info("New review added to dataset")
-
-# ================= MODEL PERFORMANCE =================
-elif page == "Model Performance":
-
-    st.subheader("Model Performance")
-
-    col1, col2 = st.columns(2)
-    col1.metric("Accuracy", "0.87")
-    col1.metric("Precision", "0.85")
-    col2.metric("Recall", "0.83")
-    col2.metric("F1 Score", "0.84")
-
-# ================= EDA =================
-elif page == "EDA Analysis":
-
-    st.subheader("EDA")
-
-    fig = px.bar(df['Recommended IND'].value_counts())
-    st.plotly_chart(fig)
-
-    df['review_length'] = df['Review Text'].apply(len)
-    fig = px.histogram(df, x='review_length')
-    st.plotly_chart(fig)
-
-    pos_text = " ".join(df[df['Recommended IND']==1]['Review Text'])
-    wc = WordCloud().generate(pos_text)
-    st.image(wc.to_array())
-
-# ================= DATASET =================
-elif page == "Dataset":
-    st.dataframe(df.head(50))
+        st.success("Thank you for shopping and your review!")
+        st.info("New review added to dataset")
