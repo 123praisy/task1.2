@@ -4,6 +4,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 import time
+from wordcloud import WordCloud
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(page_title="Product Recommendation Calculator", layout="wide")
@@ -16,7 +17,7 @@ vectorizer = joblib.load("vectorizer.pkl")
 df = pd.read_csv("Womens Clothing E-Commerce Reviews.csv")
 df = df.dropna(subset=["Review Text"])
 
-# ---------------- UI STYLE ----------------
+# ================== STYLE ==================
 st.markdown("""
 <style>
 .stApp {
@@ -24,12 +25,20 @@ st.markdown("""
     color: white;
 }
 
-/* TITLE */
-.main-title {
-    font-size: 80px;
+/* SCROLLING TITLE */
+.scroll-title {
+    font-size: 70px;
     font-weight: 800;
-    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    display: block;
+    animation: scroll-left 10s linear infinite;
     color: white;
+}
+
+@keyframes scroll-left {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
 }
 
 .subtitle {
@@ -39,46 +48,19 @@ st.markdown("""
     margin-bottom: 30px;
 }
 
-.section-title {
-    font-size: 22px;
-    font-weight: 600;
-    color: white;
-    margin-top: 25px;
-}
-
-/* INPUT LABELS */
-label {
-    color: white !important;
-}
-
-/* BUTTON */
-.stButton > button {
-    border-radius: 10px;
-    background-color: #2563eb;
-    color: white;
-    font-weight: 600;
-}
-
-/* RESULT */
-.result-good {
-    color: #22c55e;
-    font-size: 20px;
-    font-weight: 600;
-}
-
-.result-bad {
-    color: #ef4444;
-    font-size: 20px;
-    font-weight: 600;
-}
-
-/* METRIC CARDS */
+/* METRIC CARD */
 .metric-card {
     background: rgba(255,255,255,0.08);
     padding: 20px;
     border-radius: 15px;
     text-align: center;
-    box-shadow: 0px 4px 15px rgba(0,0,0,0.2);
+    transition: 0.3s;
+}
+
+.metric-card:hover {
+    transform: scale(1.05);
+    background: rgba(255,255,255,0.2);
+    box-shadow: 0px 0px 20px rgba(255,255,255,0.6);
 }
 
 .metric-title {
@@ -87,159 +69,90 @@ label {
 }
 
 .metric-value {
-    font-size: 28px;
+    font-size: 30px;
     font-weight: 700;
-    color: white;
+    color: white !important;
 }
+
+/* RESULT */
+.result-good { color: #22c55e; font-size: 20px; font-weight: 600; }
+.result-bad { color: #ef4444; font-size: 20px; font-weight: 600; }
+
 </style>
 """, unsafe_allow_html=True)
 
-# ---------------- HEADER ----------------
-st.markdown('<p class="main-title">PRODUCT RECOMMENDATION CALCULATOR</p>', unsafe_allow_html=True)
+# ================= HEADER =================
+st.markdown('<div class="scroll-title">PRODUCT RECOMMENDATION CALCULATOR</div>', unsafe_allow_html=True)
 st.markdown('<p class="subtitle">Analyze customer reviews to estimate recommendation likelihood</p>', unsafe_allow_html=True)
 st.markdown("---")
 
-# ---------------- SIDEBAR ----------------
-page = st.sidebar.radio("Navigation", ["Review Analysis", "Model Performance", "Dataset"])
+# ================= SIDEBAR =================
+page = st.sidebar.radio("Navigation", ["Review Analysis", "Model Performance", "EDA Analysis", "Dataset"])
 
 # ================= REVIEW ANALYSIS =================
 if page == "Review Analysis":
 
-    st.markdown('<p class="section-title">Review Analysis</p>', unsafe_allow_html=True)
+    review = st.text_area("Enter Review", height=120)
 
-    # FILTER
-    if "Rating" in df.columns:
-        rating = st.slider("⭐ Filter by Rating", 1, 5, (1, 5))
-        filtered_df = df[
-            (df["Rating"] >= rating[0]) & (df["Rating"] <= rating[1])
-        ]
-    else:
-        filtered_df = df
-
-    # SEARCH
-    search = st.text_input("Search Reviews")
-    if search:
-        filtered_df = filtered_df[
-            filtered_df["Review Text"].str.contains(search, case=False, na=False)
-        ]
-
-    reviews = filtered_df["Review Text"].tolist()[:200]
-
-    # INPUT
-    example = st.selectbox("Choose Sample Review", [""] + reviews)
-    review = st.text_area("Enter Review", value=example, height=120)
-
-    col1, col2 = st.columns(2)
-    analyze = col1.button("Analyze")
-    clear = col2.button("Clear")
-
-    if clear:
-        review = ""
-
-    # ---------------- PREDICTION ----------------
-    if analyze and review.strip() != "":
+    if st.button("Analyze") and review.strip():
 
         review_tfidf = vectorizer.transform([review])
         prediction = model.predict(review_tfidf)[0]
         prob = model.predict_proba(review_tfidf)[0]
 
-        prob_not = float(prob[0])
         prob_yes = float(prob[1])
-        confidence = prob_yes if prediction == 1 else prob_not
+        confidence = prob_yes if prediction == 1 else float(prob[0])
 
-        review_length = len(review)
-        word_count = len(review.split())
-
-        st.markdown("---")
-        st.markdown('<p class="section-title">Analysis Results</p>', unsafe_allow_html=True)
-
-        # -------- METRIC CARDS --------
         col1, col2, col3, col4 = st.columns(4)
 
-        col1.markdown(f"""
-        <div class="metric-card">
-            <div class="metric-title">📝 Characters</div>
-            <div class="metric-value">{review_length}</div>
-        </div>
-        """, unsafe_allow_html=True)
+        col1.markdown(f"""<div class="metric-card">
+        <div class="metric-title">Characters</div>
+        <div class="metric-value">{len(review)}</div></div>""", unsafe_allow_html=True)
 
-        col2.markdown(f"""
-        <div class="metric-card">
-            <div class="metric-title">🔤 Words</div>
-            <div class="metric-value">{word_count}</div>
-        </div>
-        """, unsafe_allow_html=True)
+        col2.markdown(f"""<div class="metric-card">
+        <div class="metric-title">Words</div>
+        <div class="metric-value">{len(review.split())}</div></div>""", unsafe_allow_html=True)
 
-        col3.markdown(f"""
-        <div class="metric-card">
-            <div class="metric-title">📊 Recommendation</div>
-            <div class="metric-value">{prob_yes:.2f}</div>
-        </div>
-        """, unsafe_allow_html=True)
+        col3.markdown(f"""<div class="metric-card">
+        <div class="metric-title">Recommendation</div>
+        <div class="metric-value">{prob_yes:.2f}</div></div>""", unsafe_allow_html=True)
 
-        col4.markdown(f"""
-        <div class="metric-card">
-            <div class="metric-title">🎯 Confidence</div>
-            <div class="metric-value">{confidence:.2f}</div>
-        </div>
-        """, unsafe_allow_html=True)
+        col4.markdown(f"""<div class="metric-card">
+        <div class="metric-title">Confidence</div>
+        <div class="metric-value">{confidence:.2f}</div></div>""", unsafe_allow_html=True)
 
-        # RESULT
         if prediction == 1:
             st.markdown('<p class="result-good">✅ Likely Recommended</p>', unsafe_allow_html=True)
         else:
-            st.markdown('<p class="result-bad">❌ Likely Not Recommended</p>', unsafe_allow_html=True)
-
-        # -------- CONFIDENCE BAR --------
-        st.markdown('<p class="section-title">Confidence Visualization</p>', unsafe_allow_html=True)
-
-        col_left, col_bar, col_right = st.columns([1, 6, 1])
-
-        col_left.markdown("<p style='color:white;'>0%</p>", unsafe_allow_html=True)
-
-        progress_placeholder = col_bar.empty()
-        progress_value = int(confidence * 100)
-
-        for i in range(progress_value + 1):
-            progress_placeholder.progress(i)
-            time.sleep(0.01)
-
-        col_right.markdown(f"<p style='color:white;'>{progress_value}%</p>", unsafe_allow_html=True)
-
-        # -------- GAUGE --------
-        fig = go.Figure(go.Indicator(
-            mode="gauge+number",
-            value=confidence * 100,
-            title={'text': "Confidence Meter"},
-            gauge={
-                'axis': {'range': [0, 100]},
-                'steps': [
-                    {'range': [0, 50], 'color': "#ef4444"},
-                    {'range': [50, 75], 'color': "#f59e0b"},
-                    {'range': [75, 100], 'color': "#22c55e"}
-                ],
-            }
-        ))
-
-        st.plotly_chart(fig, use_container_width=True)
+            st.markdown('<p class="result-bad">❌ Not Recommended</p>', unsafe_allow_html=True)
 
 # ================= MODEL PERFORMANCE =================
 elif page == "Model Performance":
 
-    st.markdown('<p class="section-title">Model Performance</p>', unsafe_allow_html=True)
-
     col1, col2 = st.columns(2)
-    col1.metric("📈 Accuracy", "0.87")
-    col1.metric("🎯 Precision", "0.85")
-    col2.metric("📊 Recall", "0.83")
-    col2.metric("⚖️ F1 Score", "0.84")
 
-    metrics_df = pd.DataFrame({
-        "Metric": ["Accuracy", "Precision", "Recall", "F1 Score"],
+    col1.markdown("""<div class="metric-card">
+    <div class="metric-title">Accuracy</div>
+    <div class="metric-value">0.87</div></div>""", unsafe_allow_html=True)
+
+    col1.markdown("""<div class="metric-card">
+    <div class="metric-title">Precision</div>
+    <div class="metric-value">0.85</div></div>""", unsafe_allow_html=True)
+
+    col2.markdown("""<div class="metric-card">
+    <div class="metric-title">Recall</div>
+    <div class="metric-value">0.83</div></div>""", unsafe_allow_html=True)
+
+    col2.markdown("""<div class="metric-card">
+    <div class="metric-title">F1 Score</div>
+    <div class="metric-value">0.84</div></div>""", unsafe_allow_html=True)
+
+    df_metrics = pd.DataFrame({
+        "Metric": ["Accuracy", "Precision", "Recall", "F1"],
         "Score": [0.87, 0.85, 0.83, 0.84]
     })
 
-    fig = px.bar(metrics_df, x="Metric", y="Score", text="Score")
+    fig = px.bar(df_metrics, x="Metric", y="Score", text="Score")
     fig.update_layout(
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
@@ -248,12 +161,32 @@ elif page == "Model Performance":
 
     st.plotly_chart(fig, use_container_width=True)
 
+# ================= EDA ANALYSIS =================
+elif page == "EDA Analysis":
+
+    st.subheader("Class Distribution")
+
+    fig = px.bar(df['Recommended IND'].value_counts())
+    st.plotly_chart(fig)
+
+    st.subheader("Review Length Distribution")
+
+    df['review_length'] = df['Review Text'].apply(len)
+    fig = px.histogram(df, x='review_length')
+    st.plotly_chart(fig)
+
+    st.subheader("Word Cloud - Positive Reviews")
+
+    pos_text = " ".join(df[df['Recommended IND']==1]['Review Text'])
+    wc = WordCloud().generate(pos_text)
+    st.image(wc.to_array())
+
+    st.subheader("Word Cloud - Negative Reviews")
+
+    neg_text = " ".join(df[df['Recommended IND']==0]['Review Text'])
+    wc2 = WordCloud().generate(neg_text)
+    st.image(wc2.to_array())
+
 # ================= DATASET =================
 elif page == "Dataset":
-
-    st.markdown('<p class="section-title">Dataset Preview</p>', unsafe_allow_html=True)
     st.dataframe(df.head(50))
-
-# ---------------- FOOTER ----------------
-st.markdown("---")
-st.caption("Smart review analysis for product recommendation insights")
