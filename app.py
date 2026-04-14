@@ -112,7 +112,7 @@ if page == "Review Analysis":
             c2.markdown(f"<div class='metric-card'>Positive<br><b>{pos}</b></div>", unsafe_allow_html=True)
             c3.markdown(f"<div class='metric-card'>Negative<br><b>{neg}</b></div>", unsafe_allow_html=True)
             c4.markdown(f"<div class='metric-card'>Total<br><b>{len(data)}</b></div>", unsafe_allow_html=True)
-            c5.markdown(f"<div class='metric-card'>⭐ Rating<br><b>{avg_rating}</b></div>", unsafe_allow_html=True)
+            c5.markdown(f"<div class='metric-card'>⭐Rating<br><b>{avg_rating}</b></div>", unsafe_allow_html=True)
 
             # -------- CONFIDENCE BAR --------
             st.write("Confidence Level")
