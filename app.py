@@ -17,23 +17,45 @@ vectorizer = joblib.load("vectorizer.pkl")
 df = pd.read_csv("Womens Clothing E-Commerce Reviews.csv")
 df = df.dropna(subset=["Review Text"])
 
+# ---------------- TEXT ANALYSIS FUNCTION ----------------
+def analyze_text_insights(text):
+    text_lower = text.lower().split()
+
+    positive_words = ["good", "love", "great", "perfect", "amazing", "nice"]
+    negative_words = ["bad", "worst", "poor", "not", "small", "disappointed"]
+
+    pos_count = sum(word in text_lower for word in positive_words)
+    neg_count = sum(word in text_lower for word in negative_words)
+
+    return pos_count, neg_count
+
 # ---------------- UI STYLE ----------------
 st.markdown("""
 <style>
 .stApp {
     background-color: #1e3a8a;
-    color: white;
 }
 
+html, body, [class*="css"]  {
+    color: white !important;
+}
+
+label {
+    color: white !important;
+}
+
+textarea, input {
+    color: black !important;
+}
+
+/* Titles */
 .main-title {
-    font-size: 70px;
+    font-size: 65px;
     font-weight: 800;
     text-align:center;
-    color: white;
 }
 
 .subtitle {
-    font-size: 18px;
     text-align: center;
     color: #d1d5db;
     margin-bottom: 20px;
@@ -42,51 +64,22 @@ st.markdown("""
 .section-title {
     font-size: 22px;
     font-weight: 600;
-    color: white;
     margin-top: 25px;
 }
 
+/* Buttons */
 .stButton>button {
-    border-radius: 10px;
-    background-color: #2563eb;
+    border-radius: 12px;
+    background: linear-gradient(90deg, #2563eb, #3b82f6);
     color: white;
     font-weight: 600;
-}
-
-.result-good {
-    color: #22c55e;
-    font-size: 20px;
-    font-weight: 600;
-}
-
-.result-bad {
-    color: #ef4444;
-    font-size: 20px;
-    font-weight: 600;
-}
-
-.metric-card {
-    background: rgba(255,255,255,0.08);
-    padding: 20px;
-    border-radius: 15px;
-    text-align: center;
-}
-
-.metric-title {
-    font-size: 14px;
-    color: #d1d5db;
-}
-
-.metric-value {
-    font-size: 26px;
-    font-weight: 700;
 }
 </style>
 """, unsafe_allow_html=True)
 
 # ---------------- HEADER ----------------
-st.markdown('<p class="main-title">Product Recommendation System App</p>', unsafe_allow_html=True)
-st.markdown('<p class="subtitle">Analyze and predict product recommendation from customer reviews</p>', unsafe_allow_html=True)
+st.markdown('<p class="main-title">AI REVIEW INTELLIGENCE SYSTEM</p>', unsafe_allow_html=True)
+st.markdown('<p class="subtitle">Understand reviews, not just predict them</p>', unsafe_allow_html=True)
 st.markdown("---")
 
 # ---------------- SIDEBAR ----------------
@@ -95,116 +88,57 @@ page = st.sidebar.radio("Navigation", ["Review Analysis", "Model Performance", "
 # ================= REVIEW ANALYSIS =================
 if page == "Review Analysis":
 
-    st.markdown('<p class="section-title">Review Analysis</p>', unsafe_allow_html=True)
+    st.markdown('<p class="section-title">🔍 Explore Reviews</p>', unsafe_allow_html=True)
 
     # FILTER
-    if "Rating" in df.columns:
-        rating = st.slider("⭐ Filter by Rating", 1, 5, (1, 5))
-        filtered_df = df[(df["Rating"] >= rating[0]) & (df["Rating"] <= rating[1])]
-    else:
-        filtered_df = df
+    rating = st.slider("⭐ Filter by Rating", 1, 5, (1, 5))
+    filtered_df = df[(df["Rating"] >= rating[0]) & (df["Rating"] <= rating[1])]
 
     # SEARCH
-    search = st.text_input("🔍 Search Reviews")
+    search = st.text_input("Search Reviews")
     if search:
         filtered_df = filtered_df[
             filtered_df["Review Text"].str.contains(search, case=False, na=False)
         ]
-        st.markdown(f"Showing results for: **{search}**")
+        st.write(f"Showing results for: {search}")
 
     reviews = filtered_df["Review Text"].tolist()[:200]
 
-    # SAMPLE INPUT
     example = st.selectbox("Choose Sample Review", [""] + reviews)
-    review = st.text_area("Enter Review", value=example, height=120)
+    review = st.text_area("Enter Review", value=example)
 
-    col1, col2 = st.columns(2)
-    analyze = col1.button("Analyze")
-    clear = col2.button("Clear")
+    if st.button("Analyze Review") and review.strip():
 
-    if clear:
-        review = ""
-
-    # ---------------- PREDICTION ----------------
-    if analyze and review.strip() != "":
-
-        with st.spinner("Analyzing review... 🤖"):
-            time.sleep(1.5)
+        with st.spinner("Analyzing... 🤖"):
+            time.sleep(1)
 
         review_tfidf = vectorizer.transform([review])
         prediction = model.predict(review_tfidf)[0]
         prob = model.predict_proba(review_tfidf)[0]
 
-        prob_not = float(prob[0])
-        prob_yes = float(prob[1])
-        confidence = prob_yes if prediction == 1 else prob_not
+        prob_yes = float(prob[1]) * 100
 
         st.markdown("---")
-        st.markdown('<p class="section-title">Analysis Results</p>', unsafe_allow_html=True)
 
-        # METRICS
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Words", len(review.split()))
-        col2.metric("Recommendation %", f"{prob_yes*100:.1f}%")
-        col3.metric("Confidence", f"{confidence*100:.1f}%")
-
-        # RESULT
         if prediction == 1:
-            st.markdown('<p class="result-good">✅ Likely Recommended</p>', unsafe_allow_html=True)
+            st.success(f"✅ Recommended ({prob_yes:.1f}%)")
         else:
-            st.markdown('<p class="result-bad">❌ Likely Not Recommended</p>', unsafe_allow_html=True)
+            st.error(f"❌ Not Recommended ({100 - prob_yes:.1f}%)")
 
-        # PROBABILITY BREAKDOWN
-        st.markdown('<p class="section-title">Probability Breakdown</p>', unsafe_allow_html=True)
-
-        col1, col2 = st.columns(2)
-        col1.progress(int(prob_not * 100))
-        col1.write(f"❌ Not Recommended: {prob_not*100:.1f}%")
-
-        col2.progress(int(prob_yes * 100))
-        col2.write(f"✅ Recommended: {prob_yes*100:.1f}%")
-
-        # CONFIDENCE BAR
-        st.markdown('<p class="section-title">Confidence</p>', unsafe_allow_html=True)
-
-        progress = int(confidence * 100)
-        st.progress(progress)
-        st.write(f"{progress}% confidence")
-
-        # GAUGE
-        fig = go.Figure(go.Indicator(
-            mode="gauge+number",
-            value=confidence * 100,
-            title={'text': "Confidence Meter"},
-            gauge={'axis': {'range': [0, 100]}}
-        ))
-        st.plotly_chart(fig, use_container_width=True)
-
-        # MODEL INSIGHT
-        st.markdown('<p class="section-title">🧠 Model Insight</p>', unsafe_allow_html=True)
-        if prediction == 1:
-            st.write("The model detected positive sentiment and supportive words.")
-        else:
-            st.write("The model detected negative or critical expressions.")
-
-        # TOP WORDS
-        st.markdown('<p class="section-title">Top Words</p>', unsafe_allow_html=True)
-        words = review.lower().split()
-        common_words = Counter(words).most_common(5)
-        for word, count in common_words:
-            st.write(f"{word} ({count})")
-
-    # ================= NEW USER INPUT SECTION =================
+# ================= NEW USER INPUT =================
     st.markdown("---")
     st.markdown('<p class="section-title">✨ Test Your Own Review</p>', unsafe_allow_html=True)
 
-    user_review = st.text_area("Write your own review here...", height=120, key="user_input")
+    user_review = st.text_area("Write your own review here...")
 
     if st.button("Predict My Review 🚀"):
-        if user_review.strip() != "":
 
-            with st.spinner("Analyzing your review... 🤖"):
-                time.sleep(1.5)
+        if user_review.strip():
+
+            with st.spinner("Understanding your review... 🤖"):
+                time.sleep(1.2)
+
+            pos_count, neg_count = analyze_text_insights(user_review)
 
             review_tfidf = vectorizer.transform([user_review])
             prediction = model.predict(review_tfidf)[0]
@@ -212,10 +146,53 @@ if page == "Review Analysis":
 
             prob_yes = float(prob[1]) * 100
 
+            # SMART FIX
+            if neg_count > pos_count:
+                prediction = 0
+
+            st.markdown("---")
+
+            # RESULT BOX
             if prediction == 1:
-                st.success(f"✅ Recommended ({prob_yes:.1f}%)")
+                st.markdown(f"""
+                <div style="background:#14532d; padding:15px; border-radius:12px;">
+                ✅ Recommended <br> Confidence: {prob_yes:.1f}%
+                </div>
+                """, unsafe_allow_html=True)
             else:
-                st.error(f"❌ Not Recommended ({100 - prob_yes:.1f}%)")
+                st.markdown(f"""
+                <div style="background:#7f1d1d; padding:15px; border-radius:12px;">
+                ❌ Not Recommended <br> Confidence: {100 - prob_yes:.1f}%
+                </div>
+                """, unsafe_allow_html=True)
+
+            # SENTIMENT SCORE
+            st.markdown("### 📊 Sentiment Score")
+
+            sentiment_score = max(min((pos_count - neg_count) * 20 + 50, 100), 0)
+            st.progress(int(sentiment_score))
+            st.write(f"{sentiment_score}% overall sentiment")
+
+            # WORD HIGHLIGHT
+            st.markdown("### ✨ Key Words")
+
+            highlighted = user_review
+            for word in ["good", "love", "great"]:
+                highlighted = highlighted.replace(word, f"<span style='color:#22c55e'>{word}</span>")
+            for word in ["bad", "not", "worst"]:
+                highlighted = highlighted.replace(word, f"<span style='color:#ef4444'>{word}</span>")
+
+            st.markdown(highlighted, unsafe_allow_html=True)
+
+            # EXPLANATION
+            st.markdown("### 🧠 Explanation")
+
+            if neg_count > pos_count:
+                st.write("This review contains more negative expressions, so it is classified as not recommended.")
+            elif pos_count > neg_count:
+                st.write("This review contains more positive expressions, so it is classified as recommended.")
+            else:
+                st.write("This review has a mix of positive and negative expressions.")
 
         else:
             st.warning("Please enter a review")
@@ -225,19 +202,10 @@ elif page == "Model Performance":
 
     st.markdown('<p class="section-title">Model Performance</p>', unsafe_allow_html=True)
 
-    col1, col2 = st.columns(2)
-    col1.metric("Accuracy", "0.87")
-    col1.metric("Precision", "0.85")
-    col2.metric("Recall", "0.83")
-    col2.metric("F1 Score", "0.84")
-
-    metrics_df = pd.DataFrame({
-        "Metric": ["Accuracy", "Precision", "Recall", "F1 Score"],
-        "Score": [0.87, 0.85, 0.83, 0.84]
-    })
-
-    fig = px.bar(metrics_df, x="Metric", y="Score", text="Score")
-    st.plotly_chart(fig, use_container_width=True)
+    st.metric("Accuracy", "0.87")
+    st.metric("Precision", "0.85")
+    st.metric("Recall", "0.83")
+    st.metric("F1 Score", "0.84")
 
 # ================= DATASET =================
 elif page == "Dataset":
@@ -247,4 +215,4 @@ elif page == "Dataset":
 
 # ---------------- FOOTER ----------------
 st.markdown("---")
-st.caption("Smart AI system for analyzing product reviews")
+st.caption("AI-powered system for understanding customer reviews")
