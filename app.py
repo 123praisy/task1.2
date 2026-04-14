@@ -86,9 +86,7 @@ if page == "Review Analysis":
 
     if st.session_state.analysis_done and st.session_state.cart:
 
-        # 🔥 REMOVE DUPLICATES FOR ANALYSIS ONLY
         unique_cart = list(set(st.session_state.cart))
-
         best_score = 0
 
         for i, item in enumerate(unique_cart):
@@ -103,14 +101,18 @@ if page == "Review Analysis":
             pos = sum(data["Recommended IND"] == 1)
             neg = sum(data["Recommended IND"] == 0)
 
+            # ⭐ NEW: Average Rating
+            avg_rating = round(data["Rating"].mean(), 2) if "Rating" in data.columns else "N/A"
+
             st.markdown(f"## 🛍 {item}")
 
-            c1,c2,c3,c4 = st.columns(4)
+            c1,c2,c3,c4,c5 = st.columns(5)
 
             c1.markdown(f"<div class='metric-card'>Recommendation<br><b>{prob:.2f}</b></div>", unsafe_allow_html=True)
             c2.markdown(f"<div class='metric-card'>Positive<br><b>{pos}</b></div>", unsafe_allow_html=True)
             c3.markdown(f"<div class='metric-card'>Negative<br><b>{neg}</b></div>", unsafe_allow_html=True)
             c4.markdown(f"<div class='metric-card'>Total<br><b>{len(data)}</b></div>", unsafe_allow_html=True)
+            c5.markdown(f"<div class='metric-card'>⭐ Rating<br><b>{avg_rating}</b></div>", unsafe_allow_html=True)
 
             # -------- CONFIDENCE BAR --------
             st.write("Confidence Level")
@@ -157,10 +159,24 @@ if page == "Review Analysis":
             st.session_state.cart
         )
 
+        # 🔥 Check recommendation score again
+        pid = int(selected_purchase.split(" - ")[0])
+        data = df[df["Clothing ID"] == pid]
+
+        text = " ".join(data["Review Text"])
+        tfidf = vectorizer.transform([text])
+        prob = model.predict_proba(tfidf)[0][1]
+
         if st.button("Confirm Purchase"):
+
             st.session_state.purchased = selected_purchase
             st.session_state.confirm_purchase = False
-            st.success("🎉 Thank you for choosing highly recommended product!")
+
+            # ⚠️ WARNING FOR BAD PRODUCT
+            if prob < 0.5:
+                st.error("⚠️ You may regret this purchase as it has low recommendation and ratings.")
+            else:
+                st.success("🎉 Thank you for choosing a highly recommended product!")
 
     # -------- REVIEW SECTION --------
     if st.session_state.purchased:
