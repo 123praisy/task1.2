@@ -211,6 +211,7 @@ if page == "Review Analysis":
             st.session_state.purchased = selected_purchase
             st.session_state.confirm_purchase = False
 
+            if prob < 0.5:
                 st.error("⚠️ You may regret this purchase as it has low recommendation and ratings.")
             else:
                 st.success("🎉 Thank you for choosing a highly recommended product!")
