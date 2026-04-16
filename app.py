@@ -213,20 +213,20 @@ if page == "Review Analysis":
 
             if prob < 0.5:
     st.markdown("""
-    <div style="background-color:#007BFF; padding:15px; border-radius:10px;">
-        <p style="color:white; font-weight:bold;">
-        ⚠️ You may regret this purchase as it has low recommendation and ratings.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-else:
+                    <div style="background-color:#007BFF; padding:15px; border-radius:10px;">
+                    <p style="color:white; font-weight:bold;">
+                    ⚠️ You may regret this purchase as it has low recommendation and ratings.
+                    </p>
+                        </div>
+                """, unsafe_allow_html=True)
+        else:
     st.markdown("""
-    <div style="background-color:#007BFF; padding:15px; border-radius:10px;">
-        <p style="color:white; font-weight:bold;">
-        🎉 Thank you for choosing a highly recommended product!
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+                        <div style="background-color:#007BFF; padding:15px; border-radius:10px;">
+                        <p style="color:white; font-weight:bold;">
+                        🎉 Thank you for choosing a highly recommended product!
+                    </p>
+                    </div>
+                    """, unsafe_allow_html=True)
             
 
     # ================= REVIEW SECTION =================
