@@ -53,24 +53,6 @@ button {
 }
 button:hover {transform:scale(1.05);}
 
-.metric-card {
-    background:white;
-    color:black;
-    padding:20px;
-    border-radius:12px;
-    text-align:center;
-    min-height:110px;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    transition:0.3s;
-}
-
-.metric-card:hover {
-    transform:scale(1.05);
-    box-shadow:0 0 20px white;
-}
-
 .perf-card {
     background:white;
     color:black;
