@@ -185,7 +185,6 @@ if page == "Review Analysis":
 🏆 Best Product: {st.session_state.best_product} ⭐⭐⭐⭐⭐
 </div>
 """, unsafe_allow_html=True)
-        box-shadow: 0 0 15px rgba(255,255,255,0.3);
 
         if st.button("Purchase Best Product"):
             st.session_state.confirm_purchase = True
