@@ -56,28 +56,21 @@ button:hover {transform:scale(1.05);}
 .metric-card {
     background:white;
     color:black;
-    padding:10px;              /* reduced padding */
-    border-radius:10px;
+    padding:20px;
+    border-radius:12px;
     text-align:center;
-    min-height:80px;           /* smaller height */
+    min-height:110px;
     display:flex;
     flex-direction:column;
     justify-content:center;
-    align-items:center;
     transition:0.3s;
 }
 
-/* TEXT (LABEL) */
-.metric-card div {
-    white-space: nowrap;       
-    font-size: 13px;           /* smaller text */
-    font-weight:500;
+.metric-card:hover {
+    transform:scale(1.05);
+    box-shadow:0 0 20px white;
 }
 
-/* VALUE */
-.metric-card b {
-    font-size:16px;            /* slightly smaller number */
-}
 .perf-card {
     background:white;
     color:black;
@@ -171,18 +164,11 @@ if page == "Review Analysis":
                 st.session_state.best_product = item
 
         # -------- BEST PRODUCT --------
-        st.markdown(f"""
-                            <div style="
-                                background:#2563eb;
-                                padding:15px;
-                                border-radius:12px;
-                                color:white;
-                                font-weight:600;
-                                text-align:center;
-                            ">
-                            🏆 Best Product: {st.session_state.best_product} ⭐⭐⭐⭐⭐
-                            </div>
-                    """, unsafe_allow_html=True)
+        st.markdown("---")
+        st.success(f"🏆 Best Product: {st.session_state.best_product} ⭐⭐⭐⭐⭐")
+
+        if st.button("Purchase Best Product"):
+            st.session_state.confirm_purchase = True
 
     # ================= PURCHASE FLOW =================
     if st.session_state.confirm_purchase:
@@ -242,6 +228,7 @@ if page == "Review Analysis":
 
             st.success("✅ Thank you for your review!")
             st.info("📁 Review successfully saved to dataset")
+
 # ================= MODEL PERFORMANCE =================
 elif page == "Model Performance":
 
