@@ -212,9 +212,21 @@ if page == "Review Analysis":
             st.session_state.confirm_purchase = False
 
             if prob < 0.5:
-                st.error("⚠️ You may regret this purchase as it has low recommendation and ratings.")
-            else:
-                st.success("🎉 Thank you for choosing a highly recommended product!")
+    st.markdown("""
+    <div style="background-color:#007BFF; padding:15px; border-radius:10px;">
+        <p style="color:white; font-weight:bold;">
+        ⚠️ You may regret this purchase as it has low recommendation and ratings.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+else:
+    st.markdown("""
+    <div style="background-color:#007BFF; padding:15px; border-radius:10px;">
+        <p style="color:white; font-weight:bold;">
+        🎉 Thank you for choosing a highly recommended product!
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
             
 
     # ================= REVIEW SECTION =================
