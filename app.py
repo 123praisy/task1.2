@@ -210,20 +210,10 @@ if page == "Review Analysis":
 
             st.session_state.purchased = selected_purchase
             st.session_state.confirm_purchase = False
-<div style="
-    background:#2563eb;
-    padding:10px;
-    border-radius:10px;
-    color:white;
-    font-weight:400;
-    text-align:center;
-">
-if prob < 0.5:
+
                 st.error("⚠️ You may regret this purchase as it has low recommendation and ratings.")
             else:
                 st.success("🎉 Thank you for choosing a highly recommended product!")
-</div>
-""", unsafe_allow_html=True)
             
 
     # ================= REVIEW SECTION =================
