@@ -236,31 +236,31 @@ if page == "Review Analysis":
             df.to_csv("Womens Clothing E-Commerce Reviews.csv", index=False)
 
            st.markdown("""
-<div style="
-    background:#2563eb;
-    padding:12px;
-    border-radius:10px;
-    color:white;
-    font-weight:500;
-    text-align:center;
-    margin-top:10px;
-">
-✅ Thank you for your review!
-</div>
-""", unsafe_allow_html=True)
-
-st.markdown("""
-<div style="
-    background:#1e40af;
-    padding:12px;
-    border-radius:10px;
-    color:white;
-    text-align:center;
-    margin-top:10px;
-">
-📁 Review successfully saved to dataset
-</div>
-""", unsafe_allow_html=True)
+                    <div style="
+                                    background:#2563eb;
+                                    padding:12px;
+                                    border-radius:10px;
+                                    color:white;
+                                    font-weight:500;
+                                    text-align:center;
+                                    margin-top:10px;
+                                ">
+                                            ✅ Thank you for your review!
+                                                    </div>
+                                                    """, unsafe_allow_html=True)
+                                                    
+                                                    st.markdown("""
+                                                    <div style="
+                                                        background:#1e40af;
+                                                        padding:12px;
+                                                        border-radius:10px;
+                                                        color:white;
+                                                        text-align:center;
+                                                        margin-top:10px;
+                                                    ">
+                                                    📁 Review successfully saved to dataset
+                                                    </div>
+                                            """, unsafe_allow_html=True)
 # ================= MODEL PERFORMANCE =================
 elif page == "Model Performance":
 
