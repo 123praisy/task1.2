@@ -204,6 +204,7 @@ if page == "Review Analysis":
                 st.error("⚠️ You may regret this purchase as it has low recommendation and ratings.")
             else:
                 st.success("🎉 Thank you for choosing a highly recommended product!")
+                
 
     # ================= REVIEW SECTION =================
     if st.session_state.purchased:
@@ -234,9 +235,32 @@ if page == "Review Analysis":
             # SAVE TO CSV
             df.to_csv("Womens Clothing E-Commerce Reviews.csv", index=False)
 
-            st.success("✅ Thank you for your review!")
-            st.info("📁 Review successfully saved to dataset")
+           st.markdown("""
+<div style="
+    background:#2563eb;
+    padding:12px;
+    border-radius:10px;
+    color:white;
+    font-weight:500;
+    text-align:center;
+    margin-top:10px;
+">
+✅ Thank you for your review!
+</div>
+""", unsafe_allow_html=True)
 
+st.markdown("""
+<div style="
+    background:#1e40af;
+    padding:12px;
+    border-radius:10px;
+    color:white;
+    text-align:center;
+    margin-top:10px;
+">
+📁 Review successfully saved to dataset
+</div>
+""", unsafe_allow_html=True)
 # ================= MODEL PERFORMANCE =================
 elif page == "Model Performance":
 
