@@ -209,58 +209,60 @@ if page == "Review Analysis":
     # ================= REVIEW SECTION =================
     if st.session_state.purchased:
 
-        st.markdown("---")
-        st.subheader("📝 Please give your review on the product received")
+    st.markdown("---")
+    st.subheader("📝 Please give your review on the product received")
 
-        pid = st.session_state.purchased.split(" - ")[0]
-        pname = st.session_state.purchased.split(" - ")[1]
+    pid = st.session_state.purchased.split(" - ")[0]
+    pname = st.session_state.purchased.split(" - ")[1]
 
-        st.write(f"Product ID: {pid}")
-        st.write(f"Product Name: {pname}")
+    st.write(f"Product ID: {pid}")
+    st.write(f"Product Name: {pname}")
 
-        review = st.text_area("Write your review")
+    review = st.text_area("Write your review")
 
-        if st.button("Submit Review"):
+    if st.button("Submit Review"):
 
-            new_row = {
-                "Clothing ID": int(pid),
-                "Class Name": pname,
-                "Review Text": review,
-                "Recommended IND": 1,
-                "Rating": 5
-            }
+        new_row = {
+            "Clothing ID": int(pid),
+            "Class Name": pname,
+            "Review Text": review,
+            "Recommended IND": 1,
+            "Rating": 5
+        }
 
-            df.loc[len(df)] = new_row
+        df.loc[len(df)] = new_row
 
-            # SAVE TO CSV
-            df.to_csv("Womens Clothing E-Commerce Reviews.csv", index=False)
+        # SAVE TO CSV
+        df.to_csv("Womens Clothing E-Commerce Reviews.csv", index=False)
 
-           st.markdown("""
-                    <div style="
-                                    background:#2563eb;
-                                    padding:12px;
-                                    border-radius:10px;
-                                    color:white;
-                                    font-weight:500;
-                                    text-align:center;
-                                    margin-top:10px;
-                                ">
-                                            ✅ Thank you for your review!
-                                                    </div>
-                                                    """, unsafe_allow_html=True)
-                                                    
-                                                    st.markdown("""
-                                                    <div style="
-                                                        background:#1e40af;
-                                                        padding:12px;
-                                                        border-radius:10px;
-                                                        color:white;
-                                                        text-align:center;
-                                                        margin-top:10px;
-                                                    ">
-                                                    📁 Review successfully saved to dataset
-                                                    </div>
-                                            """, unsafe_allow_html=True)
+        # ✅ SUCCESS MESSAGE 1
+        st.markdown("""
+        <div style="
+            background:#2563eb;
+            padding:12px;
+            border-radius:10px;
+            color:white;
+            font-weight:500;
+            text-align:center;
+            margin-top:10px;
+        ">
+        ✅ Thank you for your review!
+        </div>
+        """, unsafe_allow_html=True)
+
+        # ✅ SUCCESS MESSAGE 2
+        st.markdown("""
+        <div style="
+            background:#1e40af;
+            padding:12px;
+            border-radius:10px;
+            color:white;
+            text-align:center;
+            margin-top:10px;
+        ">
+        📁 Review successfully saved to dataset
+        </div>
+        """, unsafe_allow_html=True)
 # ================= MODEL PERFORMANCE =================
 elif page == "Model Performance":
 
