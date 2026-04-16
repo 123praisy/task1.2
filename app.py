@@ -56,27 +56,19 @@ button:hover {transform:scale(1.05);}
 .metric-card {
     background:white;
     color:black;
-    padding:10px;              /* reduced padding */
-    border-radius:10px;
+    padding:20px;
+    border-radius:12px;
     text-align:center;
-    min-height:80px;           /* smaller height */
+    min-height:110px;
     display:flex;
     flex-direction:column;
     justify-content:center;
-    align-items:center;
     transition:0.3s;
 }
 
-/* TEXT (LABEL) */
-.metric-card div {
-    white-space: nowrap;       
-    font-size: 13px;           /* smaller text */
-    font-weight:500;
-}
-
-/* VALUE */
-.metric-card b {
-    font-size:16px;            /* slightly smaller number */
+.metric-card:hover {
+    transform:scale(1.05);
+    box-shadow:0 0 20px white;
 }
 
 .perf-card {
@@ -204,24 +196,23 @@ if page == "Review Analysis":
                 st.error("⚠️ You may regret this purchase as it has low recommendation and ratings.")
             else:
                 st.success("🎉 Thank you for choosing a highly recommended product!")
-                
 
     # ================= REVIEW SECTION =================
-   if st.session_state.purchased:
+    if st.session_state.purchased:
 
         st.markdown("---")
         st.subheader("📝 Please give your review on the product received")
 
         pid = st.session_state.purchased.split(" - ")[0]
         pname = st.session_state.purchased.split(" - ")[1]
-    
+
         st.write(f"Product ID: {pid}")
         st.write(f"Product Name: {pname}")
-    
+
         review = st.text_area("Write your review")
-    
+
         if st.button("Submit Review"):
-    
+
             new_row = {
                 "Clothing ID": int(pid),
                 "Class Name": pname,
@@ -229,11 +220,15 @@ if page == "Review Analysis":
                 "Recommended IND": 1,
                 "Rating": 5
             }
-    
+
             df.loc[len(df)] = new_row
+
+            # SAVE TO CSV
             df.to_csv("Womens Clothing E-Commerce Reviews.csv", index=False)
-    
-            st.markdown("Review saved ✅")
+
+            st.success("✅ Thank you for your review!")
+            st.info("📁 Review successfully saved to dataset")
+
 # ================= MODEL PERFORMANCE =================
 elif page == "Model Performance":
 
