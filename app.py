@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 import time
 import seaborn as sns
-import matplotlib.pyplot as plt
+import matplotlib.pyplot 
 
 st.set_page_config(page_title="Best Product and Highly Recommendation Calculator", layout="wide")
 
