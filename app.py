@@ -56,27 +56,19 @@ button:hover {transform:scale(1.05);}
 .metric-card {
     background:white;
     color:black;
-    padding:10px;             
-    border-radius:10px;
+    padding:20px;
+    border-radius:12px;
     text-align:center;
-    min-height:80px;           
+    min-height:110px;
     display:flex;
     flex-direction:column;
     justify-content:center;
-    align-items:center;
     transition:0.3s;
 }
 
-/* TEXT (LABEL) */
-.metric-card div {
-    white-space: nowrap;       
-    font-size: 13px;           /* smaller text */
-    font-weight:500;
-}
-
-/* VALUE */
-.metric-card b {
-    font-size:16px;            /* slightly smaller number */
+.metric-card:hover {
+    transform:scale(1.05);
+    box-shadow:0 0 20px white;
 }
 
 .perf-card {
@@ -173,24 +165,12 @@ if page == "Review Analysis":
 
         # -------- BEST PRODUCT --------
         st.markdown("---")
-        st.markdown(f"""
-<div style="
-    background:#2563eb;
-    padding:10px;
-    border-radius:10px;
-    color:white;
-    font-weight:400;
-    text-align:center;
-">
-🏆 Best Product: {st.session_state.best_product} ⭐⭐⭐⭐⭐
-</div>
-""", unsafe_allow_html=True)
+        st.success(f"🏆 Best Product: {st.session_state.best_product} ⭐⭐⭐⭐⭐")
 
         if st.button("Purchase Best Product"):
             st.session_state.confirm_purchase = True
 
     # ================= PURCHASE FLOW =================
-        # ================= PURCHASE FLOW =================
     if st.session_state.confirm_purchase:
 
         st.subheader("🛍 Confirm Purchase")
@@ -213,23 +193,9 @@ if page == "Review Analysis":
             st.session_state.confirm_purchase = False
 
             if prob < 0.5:
-                st.markdown("""
-                <div style="background-color:#007BFF; padding:15px; border-radius:10px;">
-                    <p style="color:white; font-weight:bold;">
-                    ⚠️ You may regret this purchase as it has low recommendation and ratings.
-                    </p>
-                </div>
-                """, unsafe_allow_html=True)
-
+                st.error("⚠️ You may regret this purchase as it has low recommendation and ratings.")
             else:
-                st.markdown("""
-                <div style="background-color:#007BFF; padding:15px; border-radius:10px;">
-                    <p style="color:white; font-weight:bold;">
-                    🎉 Thank you for choosing a highly recommended product!
-                    </p>
-                </div>
-                """, unsafe_allow_html=True)
-            
+                st.success("🎉 Thank you for choosing a highly recommended product!")
 
     # ================= REVIEW SECTION =================
     if st.session_state.purchased:
