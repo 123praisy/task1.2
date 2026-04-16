@@ -56,21 +56,28 @@ button:hover {transform:scale(1.05);}
 .metric-card {
     background:white;
     color:black;
-    padding:20px;
-    border-radius:12px;
+    padding:10px;              /* reduced padding */
+    border-radius:10px;
     text-align:center;
-    min-height:110px;
+    min-height:80px;           /* smaller height */
     display:flex;
     flex-direction:column;
     justify-content:center;
+    align-items:center;
     transition:0.3s;
 }
 
-.metric-card:hover {
-    transform:scale(1.05);
-    box-shadow:0 0 20px white;
+/* TEXT (LABEL) */
+.metric-card div {
+    white-space: nowrap;       
+    font-size: 13px;           /* smaller text */
+    font-weight:500;
 }
 
+/* VALUE */
+.metric-card b {
+    font-size:16px;            /* slightly smaller number */
+}
 .perf-card {
     background:white;
     color:black;
@@ -164,11 +171,18 @@ if page == "Review Analysis":
                 st.session_state.best_product = item
 
         # -------- BEST PRODUCT --------
-        st.markdown("---")
-        st.success(f"🏆 Best Product: {st.session_state.best_product} ⭐⭐⭐⭐⭐")
-
-        if st.button("Purchase Best Product"):
-            st.session_state.confirm_purchase = True
+        st.markdown(f"""
+                            <div style="
+                                background:#2563eb;
+                                padding:15px;
+                                border-radius:12px;
+                                color:white;
+                                font-weight:600;
+                                text-align:center;
+                            ">
+                            🏆 Best Product: {st.session_state.best_product} ⭐⭐⭐⭐⭐
+                            </div>
+                    """, unsafe_allow_html=True)
 
     # ================= PURCHASE FLOW =================
     if st.session_state.confirm_purchase:
@@ -226,8 +240,30 @@ if page == "Review Analysis":
             # SAVE TO CSV
             df.to_csv("Womens Clothing E-Commerce Reviews.csv", index=False)
 
-            st.success("✅ Thank you for your review!")
-            st.info("📁 Review successfully saved to dataset")
+            st.success("""
+                            <div style="
+                                background:#2563eb;
+                                padding:12px;
+                                border-radius:10px;
+                                color:white;
+                                font-weight:500;
+                                text-align:center;
+                                margin-top:10px;
+                            ">
+                            ✅ Thank you for your review!
+                            </div>
+                            """, unsafe_allow_html=True)
+            st.info(""""
+        <div style="
+            background:#1e40af;
+            padding:12px;
+            border-radius:10px;
+            color:white;
+            text-align:center;
+            margin-top:10px;
+        ">
+        📁 Review successfully saved to dataset
+        </div>
 
 # ================= MODEL PERFORMANCE =================
 elif page == "Model Performance":
