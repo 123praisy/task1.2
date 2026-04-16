@@ -52,6 +52,31 @@ button {
     border-radius:10px;
 }
 button:hover {transform:scale(1.05);}
+.metric-card {
+    background:white;
+    color:black;
+    padding:10px;             
+    border-radius:10px;
+    text-align:center;
+    min-height:80px;           
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    transition:0.3s;
+}
+
+/* TEXT (LABEL) */
+.metric-card div {
+    white-space: nowrap;       
+    font-size: 13px;           
+    font-weight:500;
+}
+
+/* VALUE */
+.metric-card b {
+    font-size:16px;            
+}
 
 .perf-card {
     background:white;
