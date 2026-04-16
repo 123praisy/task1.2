@@ -52,6 +52,7 @@ button {
     border-radius:10px;
 }
 button:hover {transform:scale(1.05);}
+
 .metric-card {
     background:white;
     color:black;
@@ -66,14 +67,12 @@ button:hover {transform:scale(1.05);}
     transition:0.3s;
 }
 
-/* TEXT (LABEL) */
 .metric-card div {
     white-space: nowrap;       
     font-size: 13px;           
     font-weight:500;
 }
 
-/* VALUE */
 .metric-card b {
     font-size:16px;            
 }
@@ -166,11 +165,34 @@ if page == "Review Analysis":
 
             colR.write(f"{progress}%")
 
+            # -------- GAUGE (ADDED) --------
+            fig = go.Figure(go.Indicator(
+                mode="gauge+number",
+                value=prob * 100,
+                title={'text': "Confidence Meter", 'font': {'color': "white"}},
+                gauge={
+                    'axis': {'range': [0, 100], 'tickcolor': "white"},
+                    'bar': {'color': "#3b82f6"},
+                    'bgcolor': "white",
+                    'steps': [
+                        {'range': [0, 50], 'color': "#ef4444"},
+                        {'range': [50, 75], 'color': "#f59e0b"},
+                        {'range': [75, 100], 'color': "#22c55e"}
+                    ],
+                }
+            ))
+
+            fig.update_layout(
+                paper_bgcolor='rgba(0,0,0,0)',
+                font={'color': "white"}
+            )
+
+            st.plotly_chart(fig, use_container_width=True, key=f"gauge_{i}")
+
             if prob > best_score:
                 best_score = prob
                 st.session_state.best_product = item
 
-        # -------- BEST PRODUCT --------
         st.markdown("---")
         st.success(f"🏆 Best Product: {st.session_state.best_product} ⭐⭐⭐⭐⭐")
 
@@ -229,8 +251,6 @@ if page == "Review Analysis":
             }
 
             df.loc[len(df)] = new_row
-
-            # SAVE TO CSV
             df.to_csv("Womens Clothing E-Commerce Reviews.csv", index=False)
 
             st.success("✅ Thank you for your review!")
