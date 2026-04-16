@@ -173,7 +173,19 @@ if page == "Review Analysis":
 
         # -------- BEST PRODUCT --------
         st.markdown("---")
-        st.success(f"🏆 Best Product: {st.session_state.best_product} ⭐⭐⭐⭐⭐")
+        st.markdown(f"""
+<div style="
+    background:#2563eb;
+    padding:15px;
+    border-radius:12px;
+    color:white;
+    font-weight:600;
+    text-align:center;
+">
+🏆 Best Product: {st.session_state.best_product} ⭐⭐⭐⭐⭐
+</div>
+""", unsafe_allow_html=True)
+        box-shadow: 0 0 15px rgba(255,255,255,0.3);
 
         if st.button("Purchase Best Product"):
             st.session_state.confirm_purchase = True
