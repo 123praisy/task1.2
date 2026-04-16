@@ -56,26 +56,27 @@ button:hover {transform:scale(1.05);}
 .metric-card {
     background:white;
     color:black;
-    padding:15px;
-    border-radius:12px;
+    padding:10px;             
+    border-radius:10px;
     text-align:center;
-    min-height:100px;
+    min-height:80px;           
     display:flex;
     flex-direction:column;
     justify-content:center;
+    align-items:center;
     transition:0.3s;
 }
 
-/* FIX TEXT */
+/* TEXT (LABEL) */
 .metric-card div {
-    white-space: nowrap;     
-    font-size: 15px;          
-    overflow: hidden;
-    text-overflow: ellipsis; 
+    white-space: nowrap;       
+    font-size: 13px;           /* smaller text */
+    font-weight:500;
 }
 
+/* VALUE */
 .metric-card b {
-    font-size:18px;
+    font-size:16px;            /* slightly smaller number */
 }
 
 .perf-card {
@@ -146,7 +147,7 @@ if page == "Review Analysis":
 
             c1,c2,c3,c4,c5 = st.columns(5)
 
-            c1.markdown(f"<div class='metric-card'>Score<br><b>{prob:.2f}</b></div>", unsafe_allow_html=True)
+            c1.markdown(f"<div class='metric-card'>Recommendation<br><b>{prob:.2f}</b></div>", unsafe_allow_html=True)
             c2.markdown(f"<div class='metric-card'>Positive<br><b>{pos}</b></div>", unsafe_allow_html=True)
             c3.markdown(f"<div class='metric-card'>Negative<br><b>{neg}</b></div>", unsafe_allow_html=True)
             c4.markdown(f"<div class='metric-card'>Total<br><b>{len(data)}</b></div>", unsafe_allow_html=True)
