@@ -35,41 +35,24 @@ if "purchased" not in st.session_state:
 # ---------------- STYLE ----------------
 st.markdown("""
 <style>
+.stApp {background:#1e3a8a;color:white;}
 
-/* BACKGROUND */
-.stApp {
-    background:#1e3a8a;
-    color:white;
-}
+textarea {background:white !important;color:black !important;}
 
-/* TEXTAREA */
-textarea {
-    background:white !important;
-    color:black !important;
-}
+label {color:white !important;}
 
-/* SELECTBOX FIX (WHITE TEXT ON BLUE BG LABEL) */
-label, .stSelectbox label {
-    color:white !important;
-}
-
-/* DROPDOWN BOX */
 div[data-baseweb="select"] > div {
     background:white !important;
     color:black !important;
 }
 
-/* BUTTON */
 button {
     background:#2563eb !important;
     color:white !important;
     border-radius:10px;
 }
-button:hover {
-    transform:scale(1.05);
-}
+button:hover {transform:scale(1.05);}
 
-/* METRIC CARD (FIX WIDTH + NO TEXT BREAK) */
 .metric-card {
     background:white;
     color:black;
@@ -80,23 +63,14 @@ button:hover {
     display:flex;
     flex-direction:column;
     justify-content:center;
-    font-size:16px;
-    font-weight:500;
     transition:0.3s;
-    word-wrap:normal;
 }
 
-.metric-card b {
-    font-size:20px;
-}
-
-/* HOVER GLOW */
 .metric-card:hover {
     transform:scale(1.05);
     box-shadow:0 0 20px white;
 }
 
-/* MODEL PERFORMANCE CARDS */
 .perf-card {
     background:white;
     color:black;
@@ -110,11 +84,7 @@ button:hover {
     box-shadow:0 0 20px white;
 }
 
-/* FORCE WHITE TEXT HEADINGS */
-h1, h2, h3, h4 {
-    color:white !important;
-}
-
+h1, h2, h3 {color:white !important;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -175,9 +145,8 @@ if page == "Review Analysis":
             c4.markdown(f"<div class='metric-card'>Total<br><b>{len(data)}</b></div>", unsafe_allow_html=True)
             c5.markdown(f"<div class='metric-card'>⭐ Rating<br><b>{avg_rating}</b></div>", unsafe_allow_html=True)
 
-            # -------- CONFIDENCE BAR --------
+            # -------- CONFIDENCE --------
             st.write("Confidence Level")
-
             colL, colM, colR = st.columns([1,6,1])
             colL.write("0%")
 
@@ -190,22 +159,75 @@ if page == "Review Analysis":
 
             colR.write(f"{progress}%")
 
-            # -------- GAUGE --------
-            fig = go.Figure(go.Indicator(
-                mode="gauge+number",
-                value=prob * 100,
-                title={'text': "Confidence"},
-                gauge={'axis': {'range': [0, 100]}}
-            ))
-
-            st.plotly_chart(fig, key=f"gauge_{i}")
-
             if prob > best_score:
                 best_score = prob
                 st.session_state.best_product = item
 
+        # -------- BEST PRODUCT --------
         st.markdown("---")
-        st.success(f"🏆 Best Product: {st.session_state.best_product}")
+        st.success(f"🏆 Best Product: {st.session_state.best_product} ⭐⭐⭐⭐⭐")
+
+        if st.button("Purchase Best Product"):
+            st.session_state.confirm_purchase = True
+
+    # ================= PURCHASE FLOW =================
+    if st.session_state.confirm_purchase:
+
+        st.subheader("🛍 Confirm Purchase")
+
+        selected_purchase = st.selectbox(
+            "Select product to purchase",
+            st.session_state.cart
+        )
+
+        pid = int(selected_purchase.split(" - ")[0])
+        data = df[df["Clothing ID"] == pid]
+
+        text = " ".join(data["Review Text"])
+        tfidf = vectorizer.transform([text])
+        prob = model.predict_proba(tfidf)[0][1]
+
+        if st.button("Confirm Purchase"):
+
+            st.session_state.purchased = selected_purchase
+            st.session_state.confirm_purchase = False
+
+            if prob < 0.5:
+                st.error("⚠️ You may regret this purchase as it has low recommendation and ratings.")
+            else:
+                st.success("🎉 Thank you for choosing a highly recommended product!")
+
+    # ================= REVIEW SECTION =================
+    if st.session_state.purchased:
+
+        st.markdown("---")
+        st.subheader("📝 Please give your review on the product received")
+
+        pid = st.session_state.purchased.split(" - ")[0]
+        pname = st.session_state.purchased.split(" - ")[1]
+
+        st.write(f"Product ID: {pid}")
+        st.write(f"Product Name: {pname}")
+
+        review = st.text_area("Write your review")
+
+        if st.button("Submit Review"):
+
+            new_row = {
+                "Clothing ID": int(pid),
+                "Class Name": pname,
+                "Review Text": review,
+                "Recommended IND": 1,
+                "Rating": 5
+            }
+
+            df.loc[len(df)] = new_row
+
+            # SAVE TO CSV
+            df.to_csv("Womens Clothing E-Commerce Reviews.csv", index=False)
+
+            st.success("✅ Thank you for your review!")
+            st.info("📁 Review successfully saved to dataset")
 
 # ================= MODEL PERFORMANCE =================
 elif page == "Model Performance":
