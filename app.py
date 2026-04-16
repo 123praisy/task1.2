@@ -7,7 +7,7 @@ import time
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-st.set_page_config(page_title="Best Product and Highly Recommendation Calculator", layout="wide")
+st.set_page_config(page_title="Product Recommendation Calculator", layout="wide")
 
 # ---------------- LOAD ----------------
 model = joblib.load("model.pkl")
