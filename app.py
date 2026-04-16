@@ -35,23 +35,86 @@ if "purchased" not in st.session_state:
 # ---------------- STYLE ----------------
 st.markdown("""
 <style>
-.stApp {background:#1e3a8a;color:white;}
-textarea {background:white !important;color:black !important;}
-button {background:#2563eb !important;color:white !important;border-radius:10px;}
-button:hover {transform:scale(1.05);}
 
+/* BACKGROUND */
+.stApp {
+    background:#1e3a8a;
+    color:white;
+}
+
+/* TEXTAREA */
+textarea {
+    background:white !important;
+    color:black !important;
+}
+
+/* SELECTBOX FIX (WHITE TEXT ON BLUE BG LABEL) */
+label, .stSelectbox label {
+    color:white !important;
+}
+
+/* DROPDOWN BOX */
+div[data-baseweb="select"] > div {
+    background:white !important;
+    color:black !important;
+}
+
+/* BUTTON */
+button {
+    background:#2563eb !important;
+    color:white !important;
+    border-radius:10px;
+}
+button:hover {
+    transform:scale(1.05);
+}
+
+/* METRIC CARD (FIX WIDTH + NO TEXT BREAK) */
 .metric-card {
     background:white;
     color:black;
-    padding:15px;
+    padding:20px;
+    border-radius:12px;
+    text-align:center;
+    min-height:110px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    font-size:16px;
+    font-weight:500;
+    transition:0.3s;
+    word-wrap:normal;
+}
+
+.metric-card b {
+    font-size:20px;
+}
+
+/* HOVER GLOW */
+.metric-card:hover {
+    transform:scale(1.05);
+    box-shadow:0 0 20px white;
+}
+
+/* MODEL PERFORMANCE CARDS */
+.perf-card {
+    background:white;
+    color:black;
+    padding:25px;
     border-radius:12px;
     text-align:center;
     transition:0.3s;
 }
-.metric-card:hover {
+.perf-card:hover {
     transform:scale(1.05);
-    box-shadow:0 0 15px white;
+    box-shadow:0 0 20px white;
 }
+
+/* FORCE WHITE TEXT HEADINGS */
+h1, h2, h3, h4 {
+    color:white !important;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -75,7 +138,7 @@ if page == "Review Analysis":
         st.session_state.cart.append(selected)
         st.success("Added to cart")
 
-    # -------- SHOW CART --------
+    # -------- CART --------
     st.write("### 🧺 Cart Items")
     for item in st.session_state.cart:
         st.write("✔", item)
@@ -100,9 +163,7 @@ if page == "Review Analysis":
 
             pos = sum(data["Recommended IND"] == 1)
             neg = sum(data["Recommended IND"] == 0)
-
-            # ⭐ NEW: Average Rating
-            avg_rating = round(data["Rating"].mean(), 2) if "Rating" in data.columns else "N/A"
+            avg_rating = round(data["Rating"].mean(), 2)
 
             st.markdown(f"## 🛍 {item}")
 
@@ -112,7 +173,7 @@ if page == "Review Analysis":
             c2.markdown(f"<div class='metric-card'>Positive<br><b>{pos}</b></div>", unsafe_allow_html=True)
             c3.markdown(f"<div class='metric-card'>Negative<br><b>{neg}</b></div>", unsafe_allow_html=True)
             c4.markdown(f"<div class='metric-card'>Total<br><b>{len(data)}</b></div>", unsafe_allow_html=True)
-            c5.markdown(f"<div class='metric-card'>⭐Rating<br><b>{avg_rating}</b></div>", unsafe_allow_html=True)
+            c5.markdown(f"<div class='metric-card'>⭐ Rating<br><b>{avg_rating}</b></div>", unsafe_allow_html=True)
 
             # -------- CONFIDENCE BAR --------
             st.write("Confidence Level")
@@ -144,78 +205,19 @@ if page == "Review Analysis":
                 st.session_state.best_product = item
 
         st.markdown("---")
-        st.success(f"🏆 Best Product: {st.session_state.best_product} ⭐⭐⭐⭐⭐")
-
-        if st.button("Purchase Best Product"):
-            st.session_state.confirm_purchase = True
-
-    # -------- PURCHASE FLOW --------
-    if st.session_state.confirm_purchase:
-
-        st.subheader("🛍 Confirm Purchase")
-
-        selected_purchase = st.selectbox(
-            "Select product to purchase",
-            st.session_state.cart
-        )
-
-        # 🔥 Check recommendation score again
-        pid = int(selected_purchase.split(" - ")[0])
-        data = df[df["Clothing ID"] == pid]
-
-        text = " ".join(data["Review Text"])
-        tfidf = vectorizer.transform([text])
-        prob = model.predict_proba(tfidf)[0][1]
-
-        if st.button("Confirm Purchase"):
-
-            st.session_state.purchased = selected_purchase
-            st.session_state.confirm_purchase = False
-
-            # ⚠️ WARNING FOR BAD PRODUCT
-            if prob < 0.5:
-                st.error("⚠️ You may regret this purchase as it has low recommendation and ratings.")
-            else:
-                st.success("🎉 Thank you for choosing a highly recommended product!")
-
-    # -------- REVIEW SECTION --------
-    if st.session_state.purchased:
-
-        st.markdown("---")
-        st.subheader("📝 Please give your review on the product received")
-
-        pid = st.session_state.purchased.split(" - ")[0]
-        pname = st.session_state.purchased.split(" - ")[1]
-
-        st.write(f"Product ID: {pid}")
-        st.write(f"Product Name: {pname}")
-
-        review = st.text_area("Write your review")
-
-        if st.button("Submit Review"):
-
-            df.loc[len(df)] = {
-                "Clothing ID": int(pid),
-                "Class Name": pname,
-                "Review Text": review,
-                "Recommended IND": 1
-            }
-
-            df.to_csv("Womens Clothing E-Commerce Reviews.csv", index=False)
-
-            st.success("✅ Thank you for your review!")
-            st.info("📁 New review added to dataset")
+        st.success(f"🏆 Best Product: {st.session_state.best_product}")
 
 # ================= MODEL PERFORMANCE =================
 elif page == "Model Performance":
 
     st.subheader("📊 Model Performance")
 
-    col1, col2 = st.columns(2)
-    col1.metric("Accuracy", "0.87")
-    col1.metric("Precision", "0.85")
-    col2.metric("Recall", "0.83")
-    col2.metric("F1 Score", "0.84")
+    c1, c2, c3, c4 = st.columns(4)
+
+    c1.markdown("<div class='perf-card'>Accuracy<br><b>0.87</b></div>", unsafe_allow_html=True)
+    c2.markdown("<div class='perf-card'>Precision<br><b>0.85</b></div>", unsafe_allow_html=True)
+    c3.markdown("<div class='perf-card'>Recall<br><b>0.83</b></div>", unsafe_allow_html=True)
+    c4.markdown("<div class='perf-card'>F1 Score<br><b>0.84</b></div>", unsafe_allow_html=True)
 
 # ================= EDA =================
 elif page == "EDA Analysis":
